@@ -1,4 +1,11 @@
 dni;riesgo_academico;nivel_prioridad;comentario_inicial
-75947798;Alto;Prioridad Alta;Caso priorizado por DIAB
-75886696;Medio;Prioridad Media;Caso para distribución
-70123456;Muy Alto;Prioridad Alta;Caso urgente
+75947798;Muy Alto;Prioridad Alta;Caso de prueba para distribución manual - Lima
+75886696;Alto;Prioridad Alta;Caso de prueba para distribución manual - Lima
+70123456;Medio;Prioridad Media;Caso de prueba para distribución manual - Ica
+72754038;Muy Alto;Prioridad Alta;Caso de prueba para distribución manual - Ica
+71234567;Bajo;Prioridad Baja;Caso de prueba para distribución manual - Áncash
+75431090;Alto;Prioridad Alta;Caso de prueba para distribución manual - Áncash
+76890123;Medio;Prioridad Media;Caso de prueba para distribución manual - Junín
+73456789;Muy Alto;Prioridad Alta;Caso de prueba para distribución manual - Junín
+73190860;Medio;Prioridad Media;Caso de prueba adicional - Lima
+74321109;Alto;Prioridad Alta;Caso de prueba adicional - Junín
