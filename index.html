@@ -706,6 +706,14 @@ body.supabase-connected .demo-warning{display:none!important}
 .supabase-login-box{display:grid;gap:12px;max-width:520px;margin:auto}
 .supabase-login-box .notice{margin:0}
 .supabase-config-warning{border:1px solid #fbbf24;background:#fffbeb;color:#92400e;border-radius:14px;padding:14px;margin-bottom:14px;font-weight:800}
+
+/* V75: selección de matrícula/postulación por DNI y alcance admin */
+.padron-choice-note{border:1px solid #bfdbfe;background:#eff6ff;color:#0f2d67;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800}
+.padron-choice-note small{display:block;font-weight:700;color:#475569;margin-top:4px}
+.padron-choice-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end;margin:10px 0 12px}
+.padron-choice-grid select{height:42px}
+.padron-source-pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;background:#eaf4ff;color:#075a9e;font-size:11px;font-weight:950;margin-left:8px}
+@media(max-width:800px){.padron-choice-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -959,10 +967,10 @@ function renderRegistroForm(){if(state.mode==='masiva'){qs('formMount').innerHTM
   </div>
   <div id="caseFormMount" class="hidden"></div>`}
 function validateDNI(){const b=findBenef(qs('dniInput').value);if(!b){qs('benefMount').innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">DNI no encontrado en la base demo.</div>';qs('caseFormMount').classList.add('hidden');return}state.validated=b;qs('benefMount').innerHTML=benefHTML(b);qs('caseFormMount').classList.remove('hidden');qs('caseFormMount').innerHTML=caseFormHTML(state.intervention,b)}
-function benefHTML(b){return `<div class="benef-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><div><h4>${b.nombre}</h4><div class="meta">DNI ${b.dni} · ${b.region}</div></div><span class="valid-pill">Validado</span></div><div class="benef-grid"><div class="benef-item"><b>Edad</b><span>${b.edad} años</span></div><div class="benef-item"><b>Sexo</b><span>${b.sexo}</span></div><div class="benef-item"><b>IES</b><span>${b.ies}</span></div><div class="benef-item"><b>Carrera</b><span>${b.carrera}</span></div><div class="benef-item"><b>Correo</b><span>${b.correo}</span></div><div class="benef-item"><b>Teléfono</b><span>${b.telefono}</span></div></div></div>`}
+function benefHTML(b){return `<div class="benef-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><div><h4>${b.nombre}</h4><div class="meta">DNI ${b.dni} · ${b.region}</div></div><span class="valid-pill">Validado</span></div><div class="benef-grid"><div class="benef-item"><b>Edad</b><span>${b.edad||'—'}${b.edad?' años':''}</span></div><div class="benef-item"><b>Sexo</b><span>${b.sexo||'—'}</span></div><div class="benef-item"><b>Región de estudio</b><span>${b.region||'—'}</span></div><div class="benef-item"><b>IES</b><span>${b.ies||'—'}</span></div><div class="benef-item"><b>Carrera</b><span>${b.carrera||'—'}</span></div><div class="benef-item"><b>Modalidad / beca</b><span>${b.beca||b.modalidad||'—'}</span></div><div class="benef-item"><b>Correo</b><span>${b.correo||'—'}</span></div><div class="benef-item"><b>Teléfono</b><span>${b.telefono||'—'}</span></div></div></div>`}
 function commonContactHTML(b){return `<div class="form-block"><div class="form-title"><i></i><h4>Datos de contacto</h4></div><div class="grid-3"><div><label>Teléfono del becario</label><input id="telBecario" value="${b.telefono||''}"></div><div><label>Correo del becario</label><input id="correoBecario" value="${b.correo||''}"></div><div><label>Nombre del familiar</label><input id="famNombre" placeholder="Nombre y apellidos"></div><div><label>Parentesco</label><select id="famParentesco"><option>Madre</option><option>Padre</option><option>Hermano/a</option><option>Tutor/a</option><option>Otro</option></select></div><div><label>Teléfono familiar</label><input id="famTelefono" placeholder="Número de contacto"></div></div></div>`}
 function caseFormHTML(t,b){let specific='';
-if(t==='Alerta Académica')specific=`<div class="form-block"><div class="form-title"><i></i><h4>Detalle de Alerta Académica</h4></div><div class="grid"><div><label>Riesgo académico</label><select id="riesgo"><option>Muy Alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label>Nivel de Prioridad</label><select id="nivel"><option>Prioridad Alta</option><option>Prioridad Media</option><option>Prioridad Baja</option></select></div><div><label>Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label>Estado inicial</label><select id="estadoInicial"><option>Pendiente</option><option>En seguimiento</option></select></div><div class="full"><label>Comentario inicial</label><textarea id="detalle" placeholder="Detalle inicial del caso"></textarea></div><div class="full"><label>Evidencias</label><input id="evidencias" type="file" multiple><p class="sub">En demo local se registra el nombre de los archivos como sustento.</p></div></div></div>`;
+if(t==='Alerta Académica')specific=`<div class="form-block"><div class="form-title"><i></i><h4>Detalle de Alerta Académica</h4></div><div class="grid"><div><label>Riesgo académico</label><select id="riesgo"><option>Muy alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label>Nivel de Prioridad</label><select id="nivel"><option>Prioridad Alta</option><option>Prioridad Media</option><option>Prioridad Baja</option></select></div><div><label>Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label>Estado inicial</label><select id="estadoInicial"><option>Pendiente</option><option>En seguimiento</option></select></div><div class="full"><label>Comentario inicial</label><textarea id="detalle" placeholder="Detalle inicial del caso"></textarea></div><div class="full"><label>Evidencias</label><input id="evidencias" type="file" multiple><p class="sub">En demo local se registra el nombre de los archivos como sustento.</p></div></div></div>`;
 if(t==='Protocolo')specific=`<div class="form-block"><div class="form-title"><i></i><h4>Ficha de Protocolo</h4></div><div class="grid"><div><label>Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label>Protocolo activado</label><select id="tipoProt"><option>Violencia Física</option><option>Violencia Psicológica</option></select></div><div class="full"><label>Detalle del caso</label><textarea id="detalle" placeholder="Describe los hechos conocidos, fuente de información y situación actual."></textarea></div><div class="full"><label>Detalle de la orientación brindada al beneficiario/a</label><textarea id="orientacionBrindada" placeholder="Registra la orientación inicial brindada y recomendaciones inmediatas."></textarea></div><div><label>¿Corresponde oficio?</label><select id="oficio" onchange="toggleOficioDemo()"><option>No</option><option>Sí</option></select></div><div><label>Especialista SUCCOR / profesional de seguimiento</label><input id="responsable" value="${currentUser()}"></div><div id="oficioBlock" class="full oficio-box hidden"><div class="grid"><div><label>Fecha de envío de oficio</label><input id="fechaOficio" type="date"></div><div><label>N° de Oficio</label><input id="numeroOficio" placeholder="Ej. Oficio N° 000-2026"></div><div><label>Responsable de envío del oficio</label><input id="responsableOficio" value="${currentUser()}"></div><div><label>Cargar archivo de oficio</label><input id="archivoOficio" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"></div></div><p class="sub">En esta demo se registra el nombre del archivo cargado. En producción, OTI podría almacenarlo en un repositorio seguro.</p></div><div><label>Fecha sesión 1</label><input id="sesion1Fecha" type="date" value="${today()}"></div><div><label>Responsable de seguimiento</label><input id="respSeguimiento" value="${currentUser()}"></div><div class="full"><label>Acciones de seguimiento del protocolo - Sesión 1</label><textarea id="sesion1Detalle" placeholder="Acciones realizadas, acuerdos y seguimiento de la sesión 1."></textarea></div><div><label>¿Requiere continuar seguimiento?</label><select id="req2" onchange="toggleReqSesiones()"><option>No</option><option>Sí</option></select></div><div id="sesion2Block" class="full hidden"><div class="grid"><div><label>Fecha sesión 2</label><input id="sesion2Fecha" type="date"></div><div class="full"><label>Detalle / acuerdos de la sesión 2</label><textarea id="sesion2Detalle"></textarea></div><div><label>¿Requiere una tercera sesión?</label><select id="req3" onchange="toggleReqSesiones()"><option>No</option><option>Sí</option></select></div></div></div><div id="sesion3Block" class="full hidden"><div class="grid"><div><label>Fecha sesión 3</label><input id="sesion3Fecha" type="date"></div><div class="full"><label>Detalle / cierre de la sesión 3</label><textarea id="sesion3Detalle"></textarea></div></div></div><div><label>Estado</label><select id="estadoProt"><option>En seguimiento</option><option>Cerrado</option></select></div><div class="full"><label>Evidencias del caso</label><input id="evidencias" type="file" multiple></div></div></div>`;
 if(t==='Orientación')specific=`<div class="form-block"><div class="form-title"><i></i><h4>Orientación y acta de compromiso</h4></div><div class="grid"><div><label>Fecha de orientación</label><input id="fecha" type="date" value="${today()}"></div><div><label>Modalidad</label><select id="modalidad"><option>Virtual</option><option>Presencial</option></select></div><div><label>Tipo de atención</label><select id="tipoAtencion"><option>Individual</option><option>Grupal</option></select></div><div><label>Responsable de orientación</label><input id="responsable" value="${currentUser()}"></div><div class="full"><label>Motivo de la orientación</label><input id="motivo" placeholder="Beneficios, deberes, permanencia, servicios institucionales"></div><div class="full"><label>Detalle del caso</label><textarea id="detalle" placeholder="Describe la orientación brindada, dudas atendidas y acuerdos iniciales."></textarea></div><div><label>Fecha sesión 1</label><input id="sesion1Fecha" type="date" value="${today()}"></div><div class="full"><label>Detalle / acuerdos de la sesión 1</label><textarea id="sesion1Detalle"></textarea></div><div><label>¿Requiere otra sesión?</label><select id="req2" onchange="toggleReqSesiones()"><option>No</option><option>Sí</option></select></div><div id="sesion2Block" class="full hidden"><div class="grid"><div><label>Fecha sesión 2</label><input id="sesion2Fecha" type="date"></div><div class="full"><label>Detalle / acuerdos de la sesión 2</label><textarea id="sesion2Detalle"></textarea></div><div><label>¿Requiere una tercera sesión?</label><select id="req3" onchange="toggleReqSesiones()"><option>No</option><option>Sí</option></select></div></div></div><div id="sesion3Block" class="full hidden"><div class="grid"><div><label>Fecha sesión 3</label><input id="sesion3Fecha" type="date"></div><div class="full"><label>Detalle / cierre de la sesión 3</label><textarea id="sesion3Detalle"></textarea></div></div></div><div class="full"><label>Acta de compromiso del becario</label><textarea id="acta" placeholder="Compromiso asumido por el becario y acuerdos de seguimiento"></textarea></div><div class="full"><label>Compromiso de seguimiento</label><textarea id="compromiso"></textarea></div><div><label>Estado</label><select id="estadoOri"><option>En seguimiento</option><option>Cerrado</option></select></div><div class="full alert-question"><label>¿Es un caso de alerta identificado durante la orientación?</label><select id="esAlerta" onchange="toggleAlertaOrientacion()"><option>No</option><option>Sí</option></select><p class="sub" style="margin-top:8px;color:#9a3412">Marca “Sí” cuando se detecte una situación que requiere aviso inmediato o seguimiento especial.</p></div><div id="alertaOriBlock" class="full alert-fields hidden"><div class="grid"><div><label>Tipo de alerta</label><select id="tipoAlerta"><option>Riesgo de deserción</option><option>Alerta socioemocional</option><option>Emergencia o riesgo inminente</option><option>Otra alerta</option></select></div><div><label>Dependencia a informar</label><select id="dependencia"><option>DIAB</option><option>DIBEC</option><option>DICRE</option></select></div><div><label>Nivel de aviso</label><select id="nivelAviso"><option>Aviso inmediato</option><option>Aviso en el día</option></select></div><div class="full"><label>Motivo de la alerta</label><input id="motivoAlerta" placeholder="Ej. ideación suicida, riesgo inminente, violencia, abandono, salud crítica"></div><div class="full"><label>Detalle de la alerta identificada</label><textarea id="detalleAlerta"></textarea></div></div></div><div class="full"><label>Evidencias</label><input id="evidencias" type="file" multiple></div></div></div>`;
 return `${commonContactHTML(b)}${specific}<div style="text-align:right"><button class="btn btn-primary" onclick="createCase()">Crear expediente</button></div>`}
@@ -1907,7 +1915,7 @@ function cleanPrintStyles(){return `@page{size:A4;margin:12mm}body{font-family:A
   window.showAcademicAlertRestriction=function(){
     qs('modalTitle').textContent='Alertas Académicas';
     qs('modalSub').textContent='La carga de nuevas alertas es administrada centralmente.';
-    qs('modalBody').innerHTML=`<div class="notice" style="border-color:#bfdbfe;background:#eff6ff;color:#0f2d67"><h3 style="margin:0 0 8px">El Administrador es el encargado de la carga de dichas alertas.</h3><p class="sub">Desde SUCCOR puedes solicitar una carga puntual. El administrador verá la solicitud en su bandeja.</p></div><div class="solicitud-panel"><h4>Solicitar carga de alerta académica</h4><div class="solicitud-form"><div><label>DNI del beneficiario</label><input id="reqDni" maxlength="8" inputmode="numeric" placeholder="Ej. 75947798"></div><div><label>Nivel de riesgo</label><select id="reqRiesgo"><option>Muy Alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label>Motivo / sustento</label><textarea id="reqMotivo" placeholder="Describe brevemente el motivo de la solicitud"></textarea></div><button class="btn btn-primary" onclick="crearSolicitudCargaAlerta()">Enviar solicitud</button></div></div>`;
+    qs('modalBody').innerHTML=`<div class="notice" style="border-color:#bfdbfe;background:#eff6ff;color:#0f2d67"><h3 style="margin:0 0 8px">El Administrador es el encargado de la carga de dichas alertas.</h3><p class="sub">Desde SUCCOR puedes solicitar una carga puntual. El administrador verá la solicitud en su bandeja.</p></div><div class="solicitud-panel"><h4>Solicitar carga de alerta académica</h4><div class="solicitud-form"><div><label>DNI del beneficiario</label><input id="reqDni" maxlength="8" inputmode="numeric" placeholder="Ej. 75947798"></div><div><label>Nivel de riesgo</label><select id="reqRiesgo"><option>Muy alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label>Motivo / sustento</label><textarea id="reqMotivo" placeholder="Describe brevemente el motivo de la solicitud"></textarea></div><button class="btn btn-primary" onclick="crearSolicitudCargaAlerta()">Enviar solicitud</button></div></div>`;
     qs('modal').classList.add('active'); qs('modal').classList.add('show');
   };
   window.crearSolicitudCargaAlerta=function(){
@@ -1932,7 +1940,7 @@ function cleanPrintStyles(){return `@page{size:A4;margin:12mm}body{font-family:A
   const oldCaseFormHTML=window.caseFormHTML;
   window.caseFormHTML=function(t,b){
     if(t==='Alerta Académica' && state.role==='admin'){
-      return `<div class="admin-alert-form"><div class="subtle-alert-note"><b>Registro administrado:</b> la alerta se crea con estado inicial <b>Pendiente de Conocimiento</b> y quedará visible automáticamente para la SUCCOR de la región del becario.</div><div class="form-block"><div class="form-title"><i></i><h4>Detalle de Alerta Académica</h4></div><div class="grid"><div><label>Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label>Riesgo académico</label><select id="riesgo"><option>Muy Alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label>Nivel de Prioridad</label><select id="nivel"><option>Prioridad Alta</option><option>Prioridad Media</option><option>Prioridad Baja</option></select></div><div><label>Estado inicial</label><input value="Pendiente de Conocimiento" disabled></div><div class="full"><label>Comentario inicial</label><textarea id="detalle" placeholder="Detalle inicial del caso o sustento de la alerta"></textarea></div></div></div><div style="text-align:right"><button class="btn btn-primary" onclick="createCase()">Crear Alerta Académica</button></div></div>`;
+      return `<div class="admin-alert-form"><div class="subtle-alert-note"><b>Registro administrado:</b> la alerta se crea con estado inicial <b>Pendiente de Conocimiento</b> y quedará visible automáticamente para la SUCCOR de la región del becario.</div><div class="form-block"><div class="form-title"><i></i><h4>Detalle de Alerta Académica</h4></div><div class="grid"><div><label>Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label>Riesgo académico</label><select id="riesgo"><option>Muy alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label>Nivel de Prioridad</label><select id="nivel"><option>Prioridad Alta</option><option>Prioridad Media</option><option>Prioridad Baja</option></select></div><div><label>Estado inicial</label><input value="Pendiente de Conocimiento" disabled></div><div class="full"><label>Comentario inicial</label><textarea id="detalle" placeholder="Detalle inicial del caso o sustento de la alerta"></textarea></div></div></div><div style="text-align:right"><button class="btn btn-primary" onclick="createCase()">Crear Alerta Académica</button></div></div>`;
     }
     return oldCaseFormHTML?oldCaseFormHTML(t,b):'';
   };
@@ -2725,8 +2733,8 @@ body.role-admin #sideSolicitudesBtn:not(.hidden){display:grid!important;visibili
    - Al completar URL y anon key, usa Supabase Auth + RLS.
    ========================================================= */
 window.SIBEN_SUPABASE_CONFIG = window.SIBEN_SUPABASE_CONFIG || {
-  url: 'https://vahzjuxegbzxielfmdri.supabase.co',
-  anonKey: 'sb_publishable_hmesfGFMfElmFRA_1UgCRA_B-zbH90A'
+  url: 'PEGAR_SUPABASE_URL_AQUI',
+  anonKey: 'PEGAR_SUPABASE_ANON_KEY_AQUI'
 };
 
 (function(){
@@ -2835,7 +2843,7 @@ window.SIBEN_SUPABASE_CONFIG = window.SIBEN_SUPABASE_CONFIG || {
   async function getPadronByDni(dni){
     dni=dniClean(dni); if(!dni) return null;
     if(SB.padronCache.has(dni)) return SB.padronCache.get(dni);
-    let {data,error}=await sb.from('padron_becarios_vw').select('*').eq('dni',dni).maybeSingle();
+    let {data,error}=await sb.from('padron_becarios').select('*').eq('dni',dni).maybeSingle();
     if(error) throw error;
     if(!data){
       const r=await sb.from('padron_becarios').select('*').eq('dni',dni).maybeSingle();
@@ -2936,7 +2944,7 @@ window.SIBEN_SUPABASE_CONFIG = window.SIBEN_SUPABASE_CONFIG || {
     const dnis=[...new Set(orient.map(x=>x.dni).filter(Boolean))];
     let pad=[];
     if(dnis.length){
-      const r=await sb.from('padron_becarios_vw').select('*').in('dni',dnis);
+      const r=await sb.from('padron_becarios').select('*').in('dni',dnis);
       if(!r.error) pad=r.data||[];
     }
     const padMap=new Map(pad.map(b=>[b.dni,b]));
@@ -3132,6 +3140,463 @@ window.SIBEN_SUPABASE_CONFIG = window.SIBEN_SUPABASE_CONFIG || {
     }catch(e){toast('Supabase no iniciado',e.message||String(e)); console.error(e);}
   });
 })();
+
+/* =========================================================
+   V75 - Corrección alcance administrador + DNI multipostulación
+   ========================================================= */
+(function(){
+  const SB = window.SIBEN_SB || {};
+  function q(id){return typeof qs==='function'?qs(id):document.getElementById(id)}
+  function safe(v){return String(v==null?'':v)}
+  function esc(v){return safe(v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
+  function dniClean(v){return safe(v).replace(/\D/g,'').slice(0,8)}
+  function sbClient(){return window.sibenSupabaseClient || null}
+  function activeSB(){return !!(window.SIBEN_SB && window.SIBEN_SB.enabled && window.SIBEN_SB.user && sbClient())}
+  function regionNameByIdV75(id){
+    const regs=(window.SIBEN_SB && window.SIBEN_SB.regiones) || [];
+    return (regs.find(function(r){return String(r.id)===String(id)})||{}).nombre || '';
+  }
+  function roleV75(){return (window.SIBEN_SB && window.SIBEN_SB.profile && window.SIBEN_SB.profile.rol) || state.role || 'succor'}
+  function regionIdsV75(){return (window.SIBEN_SB && window.SIBEN_SB.regionIds) || []}
+  function scopeTextV75(){
+    const role=roleV75();
+    if(role==='admin') return 'Nacional';
+    const regs=(window.SIBEN_SB?.regiones||[]).filter(function(r){return regionIdsV75().map(String).includes(String(r.id))}).map(function(r){return r.nombre});
+    return regs.join(', ') || 'Ámbito asignado';
+  }
+  function fixScopeV75(){
+    const scope=scopeTextV75();
+    const role=roleV75();
+    const regionPill=document.querySelector('.region-pill');
+    if(regionPill){
+      const label=role==='admin'?'Ámbito':(regionIdsV75().length>1?'Regiones':'Región');
+      regionPill.innerHTML=label+'<br><b>'+esc(scope)+'</b>';
+    }
+    if(q('statusScope')) q('statusScope').textContent=scope;
+    if(q('scopePill')) q('scopePill').textContent='Ámbito: '+scope;
+  }
+
+  function scoreRowV75(r){
+    let s=0;
+    if(r.activo!==false) s+=1000;
+    const estado=safe(r.estado_condicion_actual||r.estado_becario).toLowerCase();
+    if(/becario|activo|continuador|matriculado|vigente/.test(estado)) s+=300;
+    if(/egres|perdid|renunc|suspend|no vigente|no activo/.test(estado)) s-=400;
+    const y=parseInt(r.anio_conv||r.anio_convocatoria||0,10); if(!isNaN(y)) s+=y;
+    if(r.region_id) s+=20;
+    if(r.institucion||r.ies) s+=10;
+    return s;
+  }
+  function normalizePadronRowV75(r,source){
+    const regionId=r.region_id || null;
+    return {
+      _raw:r,_source:source,_score:scoreRowV75(r),
+      id:r.id || r.dni,
+      dni:r.dni,
+      nombre:r.nombre_completo || r.nombre || 'Sin nombre',
+      region_id:regionId,
+      region:r.region_estudio_text || r.region_estudio || r.region || regionNameByIdV75(regionId) || '',
+      ies:r.institucion || r.ies || r.institucion_educativa || '',
+      carrera:r.carrera || '',
+      beca:r.beca || r.modalidad || '',
+      modalidad:r.modalidad || r.beca || '',
+      anio_conv:r.anio_conv || r.anio_convocatoria || '',
+      expediente:r.expediente || '',
+      estado_becario:r.estado_condicion_actual || r.estado_becario || '',
+      sexo:r.sexo || '',
+      edad:r.edad || '',
+      correo:r.correo_personal_intranet || r.correo || '',
+      telefono:r.celular_intranet || r.telefono || '',
+      monitora:r.monitora || ''
+    };
+  }
+  function dedupePadronRowsV75(rows){
+    const map=new Map();
+    rows.forEach(function(r){
+      const key=[r.dni,r.region_id,r.ies,r.carrera,r.modalidad,r.anio_conv,r.expediente].map(function(x){return safe(x).toLowerCase().trim()}).join('|');
+      if(!map.has(key) || (r._score||0)>(map.get(key)._score||0)) map.set(key,r);
+    });
+    return Array.from(map.values()).sort(function(a,b){return (b._score||0)-(a._score||0)});
+  }
+  async function selectRows(table,dni){
+    try{
+      const r=await sbClient().from(table).select('*').eq('dni',dni);
+      if(r.error){console.warn('No se pudo consultar '+table,r.error); return []}
+      return r.data||[];
+    }catch(e){console.warn('No se pudo consultar '+table,e); return []}
+  }
+  async function getPadronCandidatesV75(dni){
+    dni=dniClean(dni); if(!dni) return [];
+    const out=[];
+    const [maestro,benef,base]=await Promise.all([
+      selectRows('padron_becarios_maestro',dni),
+      selectRows('beneficiarios_master',dni),
+      selectRows('padron_becarios',dni)
+    ]);
+    maestro.forEach(function(x){out.push(normalizePadronRowV75(x,'padron_becarios_maestro'))});
+    benef.forEach(function(x){out.push(normalizePadronRowV75(x,'beneficiarios_master'))});
+    base.forEach(function(x){out.push(normalizePadronRowV75(x,'padron_becarios'))});
+    return dedupePadronRowsV75(out);
+  }
+  function sourceNameV75(s){
+    if(s==='padron_becarios_maestro') return 'Padrón maestro';
+    if(s==='beneficiarios_master') return 'Beneficiarios master';
+    return 'Padrón operativo';
+  }
+  function optionLabelV75(b,i){
+    const parts=[];
+    parts.push((i+1)+'. '+(b.modalidad||b.beca||'Beca'));
+    if(b.anio_conv) parts.push('Conv. '+b.anio_conv);
+    if(b.region) parts.push(b.region);
+    if(b.ies) parts.push(b.ies);
+    if(b.estado_becario) parts.push(b.estado_becario);
+    return parts.join(' · ');
+  }
+  function renderSelectedBenefV75(index){
+    const candidates=window.SIBEN_PADRON_CANDIDATES_V75||[];
+    const b=candidates[index] || candidates[0];
+    if(!b) return;
+    state.validated=b;
+    let html='';
+    if(candidates.length>1){
+      html+='<div class="padron-choice-note">Se encontraron '+candidates.length+' registros para este DNI.<small>Selecciona la matrícula/beca que corresponde al caso. Por defecto se prioriza el registro activo y más reciente.</small></div>';
+      html+='<div class="padron-choice-grid"><div><label>Registro del padrón a utilizar</label><select id="padronCandidateSelect" onchange="useBenefCandidateV75(this.value)">'+candidates.map(function(x,i){return '<option value="'+i+'" '+(i===index?'selected':'')+'>'+esc(optionLabelV75(x,i))+'</option>'}).join('')+'</select></div><div><span class="padron-source-pill">'+esc(sourceNameV75(b._source))+'</span></div></div>';
+    }else{
+      html+='<div class="padron-choice-note">Registro encontrado <span class="padron-source-pill">'+esc(sourceNameV75(b._source))+'</span></div>';
+    }
+    html+=benefHTML(b);
+    q('benefMount').innerHTML=html;
+    q('caseFormMount').classList.remove('hidden');
+    q('caseFormMount').innerHTML=caseFormHTML(state.intervention,b);
+  }
+  window.useBenefCandidateV75=function(i){renderSelectedBenefV75(parseInt(i,10)||0)};
+
+  const oldValidate=window.validateDNI;
+  window.validateDNI=async function(){
+    if(!activeSB()) return oldValidate ? oldValidate() : null;
+    try{
+      const dni=dniClean(q('dniInput')?.value||'');
+      if(!/^\d{8}$/.test(dni)) return toast('DNI inválido','Ingresa 8 dígitos.');
+      q('benefMount').innerHTML='<div class="notice" style="border-color:#bfdbfe;background:#eff6ff;color:#0f2d67">Buscando DNI en padrón maestro...</div>';
+      q('caseFormMount').classList.add('hidden');
+      const candidates=await getPadronCandidatesV75(dni);
+      window.SIBEN_PADRON_CANDIDATES_V75=candidates;
+      if(!candidates.length){
+        q('benefMount').innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">DNI no encontrado en padrón maestro/operativo o no visible por RLS. Si eres administrador, ejecuta el SQL v75 de políticas de padrón.</div>';
+        return;
+      }
+      renderSelectedBenefV75(0);
+    }catch(e){
+      console.error(e);
+      toast('Error al validar DNI',e.message||String(e));
+      q('benefMount').innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">Error al consultar el padrón. Revisa consola y políticas RLS.</div>';
+    }
+  };
+
+  const oldInsertAlerta=window.insertAlerta;
+  const oldCreate=window.createCase;
+  // createCase del adaptador v74 usa funciones internas; aquí solo aseguramos que el beneficiario seleccionado lleve region_id correcto.
+  window.__fixScopeV75=fixScopeV75;
+  window.addEventListener('load',function(){
+    let n=0; const timer=setInterval(function(){fixScopeV75(); if(++n>12) clearInterval(timer);},700);
+  });
+  document.addEventListener('visibilitychange',function(){if(!document.hidden) fixScopeV75();});
+})();
+
+/* =========================================================
+   V76 - Fuente oficial padron_becarios + admin nacional + insert robusto
+   ========================================================= */
+(function(){
+  function q(id){return (typeof qs==='function'?qs(id):document.getElementById(id));}
+  function safe(v){return String(v==null?'':v);}
+  function esc(v){return safe(v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function cleanDni(v){return safe(v).replace(/\D/g,'').slice(0,8);}
+  function sb(){return window.sibenSupabaseClient || null;}
+  function SB(){return window.SIBEN_SB || {};}
+  function activeSB(){return !!(SB().enabled && SB().user && sb());}
+  const previousValidateDNI_V76 = window.validateDNI;
+  const previousCreateCase_V76 = window.createCase;
+  function val(id){return q(id)?.value || '';}
+  function currentName(){return SB().profile?.nombre || (typeof currentUser==='function'?currentUser():'Usuario');}
+  function currentRole(){return (SB().profile?.rol || state.role || '').toLowerCase();}
+  function regionNameById(id){
+    const regs=SB().regiones||[];
+    return (regs.find(function(r){return String(r.id)===String(id);})||{}).nombre || '';
+  }
+  async function enrichRegionsForUser(){
+    if(!activeSB()) return;
+    const client=sb(), user=SB().user, profile=SB().profile||{};
+    if(!user) return;
+    if(profile.rol==='admin'){
+      SB().regionIds=[];
+      enforceScopeV76();
+      return;
+    }
+    const ids=new Set((SB().regionIds||[]).map(String));
+    try{
+      const r=await client.from('usuario_regiones').select('region_id').eq('user_id',user.id);
+      if(!r.error) (r.data||[]).forEach(function(x){if(x.region_id!=null) ids.add(String(x.region_id));});
+    }catch(e){console.warn('usuario_regiones no disponible',e);}
+    try{
+      const p=await client.from('perfiles').select('region_id,monitora_id,activo').eq('id',user.id).maybeSingle();
+      if(!p.error && p.data){
+        if(p.data.region_id!=null) ids.add(String(p.data.region_id));
+        if(p.data.monitora_id){
+          const mr=await client.from('monitora_regiones').select('region_id,activo').eq('monitora_id',p.data.monitora_id);
+          if(!mr.error) (mr.data||[]).filter(function(x){return x.activo!==false;}).forEach(function(x){if(x.region_id!=null) ids.add(String(x.region_id));});
+        }
+      }
+    }catch(e){console.warn('perfiles/monitora_regiones no disponible',e);}
+    SB().regionIds=Array.from(ids).map(function(x){return isNaN(Number(x))?x:Number(x);});
+    enforceScopeV76();
+  }
+  function scopeTextV76(){
+    const role=currentRole();
+    if(role==='admin') return 'Nacional';
+    const ids=(SB().regionIds||[]).map(String);
+    const names=(SB().regiones||[]).filter(function(r){return ids.includes(String(r.id));}).map(function(r){return r.nombre;});
+    return names.join(', ') || 'Ámbito asignado';
+  }
+  function enforceScopeV76(){
+    const role=currentRole();
+    const userRole=(q('userRole')?.textContent||'').toLowerCase();
+    const isAdmin=role==='admin' || userRole.includes('admin');
+    const scope=isAdmin?'Nacional':scopeTextV76();
+    const regionPill=document.querySelector('.region-pill');
+    if(regionPill){
+      const html=(isAdmin?'Ámbito':'Región')+'<br><b>'+esc(scope)+'</b>';
+      if(regionPill.innerHTML!==html) regionPill.innerHTML=html;
+    }
+    if(q('statusScope') && q('statusScope').textContent!==scope) q('statusScope').textContent=scope;
+    if(q('scopePill') && q('scopePill').textContent!=='Ámbito: '+scope) q('scopePill').textContent='Ámbito: '+scope;
+    if(isAdmin){
+      state.role='admin';
+      document.body.classList.add('role-admin');
+      if(q('avatar')) q('avatar').textContent='A';
+      if(q('userRole')) q('userRole').textContent='ADMIN';
+    }
+  }
+  function normalizeRisk(v){
+    const x=safe(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    if(x.includes('muy') && x.includes('alto')) return 'Muy alto';
+    if(x.includes('alto')) return 'Alto';
+    if(x.includes('medio')) return 'Medio';
+    if(x.includes('bajo')) return 'Bajo';
+    return 'Alto';
+  }
+  function normalizePriority(v){
+    const x=safe(v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    if(x.includes('alta')) return 'Prioridad Alta';
+    if(x.includes('baja')) return 'Prioridad Baja';
+    return 'Prioridad Media';
+  }
+  function simplePriority(v){
+    const p=normalizePriority(v);
+    return p.includes('Alta')?'Alta':p.includes('Baja')?'Baja':'Media';
+  }
+  function mapPadronV76(r){
+    const birth=r.fecha_nacimiento ? new Date(r.fecha_nacimiento) : null;
+    let edad=r.edad || '';
+    if(!edad && birth && !isNaN(birth)){
+      const now=new Date(); edad=now.getFullYear()-birth.getFullYear();
+      const m=now.getMonth()-birth.getMonth();
+      if(m<0 || (m===0 && now.getDate()<birth.getDate())) edad--;
+    }
+    const region=r.region_estudio || r.region_estudio_text || r.region || regionNameById(r.region_id) || '';
+    return {
+      dni:r.dni,
+      nombre:r.nombre_completo || r.nombre || 'Sin nombre',
+      region_id:r.region_id,
+      region:region,
+      ies:r.ies || r.institucion || '',
+      carrera:r.carrera || '',
+      beca:r.beca || r.modalidad || '',
+      modalidad:r.modalidad || r.beca || '',
+      anio_conv:r.anio_conv || '',
+      expediente:r.expediente || '',
+      sexo:r.sexo || '',
+      edad:edad || '',
+      correo:r.correo_personal_intranet || r.correo || '',
+      telefono:r.celular_intranet || r.telefono || '',
+      estado_becario:r.estado_becario || r.estado_condicion_actual || '',
+      monitora:r.monitora || ''
+    };
+  }
+  function benefHTMLV76(b){
+    return '<div class="benef-card">'+
+      '<div style="display:flex;justify-content:space-between;gap:10px;align-items:start"><div><h4>'+esc(b.nombre)+'</h4><div class="meta">DNI '+esc(b.dni)+' · '+esc(b.region||'Sin región')+'</div></div><span class="valid-pill">Validado</span></div>'+
+      '<div class="benef-grid">'+
+      '<div class="benef-item"><b>Edad</b><span>'+esc(b.edad||'—')+(b.edad?' años':'')+'</span></div>'+
+      '<div class="benef-item"><b>Sexo</b><span>'+esc(b.sexo||'—')+'</span></div>'+
+      '<div class="benef-item"><b>Región de estudio</b><span>'+esc(b.region||'—')+'</span></div>'+
+      '<div class="benef-item"><b>IES</b><span>'+esc(b.ies||'—')+'</span></div>'+
+      '<div class="benef-item"><b>Carrera</b><span>'+esc(b.carrera||'—')+'</span></div>'+
+      '<div class="benef-item"><b>Modalidad / beca</b><span>'+esc(b.beca||b.modalidad||'—')+'</span></div>'+
+      '<div class="benef-item"><b>Correo</b><span>'+esc(b.correo||'—')+'</span></div>'+
+      '<div class="benef-item"><b>Teléfono</b><span>'+esc(b.telefono||'—')+'</span></div>'+
+      '</div></div>';
+  }
+  async function fetchPadronOperativo(dni){
+    const r=await sb().from('padron_becarios').select('*').eq('dni',dni).maybeSingle();
+    if(r.error) throw r.error;
+    return r.data || null;
+  }
+  window.validateDNI=async function(){
+    if(!activeSB()){
+      if(typeof previousValidateDNI_V76==='function') return previousValidateDNI_V76();
+      return;
+    }
+    try{
+      enforceScopeV76();
+      const dni=cleanDni(q('dniInput')?.value||'');
+      if(!/^\d{8}$/.test(dni)) return toast('DNI inválido','Ingresa exactamente 8 dígitos.');
+      if(q('benefMount')) q('benefMount').innerHTML='<div class="notice" style="border-color:#bfdbfe;background:#eff6ff;color:#0f2d67">Buscando DNI en padrón operativo...</div>';
+      if(q('caseFormMount')) q('caseFormMount').classList.add('hidden');
+      const row=await fetchPadronOperativo(dni);
+      if(!row){
+        if(q('benefMount')) q('benefMount').innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">DNI no encontrado en el padrón operativo o no visible por RLS.</div>';
+        return;
+      }
+      const b=mapPadronV76(row);
+      state.validated=b;
+      if(q('benefMount')) q('benefMount').innerHTML=benefHTMLV76(b);
+      if(q('caseFormMount')){
+        q('caseFormMount').classList.remove('hidden');
+        q('caseFormMount').innerHTML=caseFormHTML(state.intervention,b);
+        const riesgo=q('riesgo'); if(riesgo){ Array.from(riesgo.options).forEach(function(o){ if(o.textContent==='Muy Alto') o.textContent='Muy alto'; }); }
+      }
+    }catch(e){
+      console.error(e);
+      toast('Error al validar DNI', e.message||String(e));
+      if(q('benefMount')) q('benefMount').innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">Error al consultar el padrón operativo. Revisa RLS o conexión.</div>';
+    }
+  };
+  async function insertAlertV76(b){
+    const base={
+      dni:b.dni,
+      region_id:b.region_id,
+      fecha_registro:val('fecha') || (typeof today==='function'?today():new Date().toISOString().slice(0,10)),
+      fecha_conocimiento:val('fecha') || (typeof today==='function'?today():new Date().toISOString().slice(0,10)),
+      tipo_alerta:'Alerta académica',
+      nivel_riesgo:normalizeRisk(val('riesgo')),
+      nivel_prioridad:normalizePriority(val('nivel')),
+      prioridad:simplePriority(val('nivel')),
+      detalle_alerta:val('detalle') || '',
+      comentario_inicial:val('detalle') || '',
+      estado:'Abierto',
+      estado_succor:val('estadoInicial') || 'Pendiente de Conocimiento',
+      estado_comunicacion:'Pendiente de comunicación',
+      requiere_continuar_seguimiento:true,
+      created_by:SB().user.id,
+      responsable_registro:currentName()
+    };
+    const variants=[];
+    variants.push(base);
+    variants.push(Object.assign({},base,{nivel_riesgo:'Alto'}));
+    const noRisk=Object.assign({},base); delete noRisk.nivel_riesgo; variants.push(noRisk);
+    const noRiskNoPriority=Object.assign({},noRisk); delete noRiskNoPriority.nivel_prioridad; variants.push(noRiskNoPriority);
+    const minimal={
+      dni:base.dni, region_id:base.region_id, fecha_registro:base.fecha_registro, fecha_conocimiento:base.fecha_conocimiento,
+      detalle_alerta:base.detalle_alerta, comentario_inicial:base.comentario_inicial,
+      created_by:base.created_by, responsable_registro:base.responsable_registro
+    };
+    variants.push(minimal);
+    let lastError=null;
+    for(const payload of variants){
+      const r=await sb().from('alertas_academicas').insert(payload).select('id').single();
+      if(!r.error) return r.data;
+      lastError=r.error;
+      const msg=safe(r.error.message).toLowerCase();
+      if(!msg.includes('check constraint') && !msg.includes('violates')) break;
+    }
+    throw lastError || new Error('No se pudo crear la alerta académica.');
+  }
+  async function insertOrientacionV76(b){
+    const req2=val('req2')==='Sí', req3=val('req3')==='Sí';
+    const payload={
+      dni:b.dni, region_id:b.region_id, fecha_orientacion:val('fecha')||(typeof today==='function'?today():new Date().toISOString().slice(0,10)),
+      modalidad:val('modalidad')||'Virtual', tipo_orientacion:val('tipoAtencion')||'Individual', responsable_orientacion:val('responsable')||currentName(),
+      motivo_orientacion:val('motivo')||'', detalle_caso:val('detalle')||'', estado:val('estadoOri')||'En seguimiento',
+      sesion1_fecha:val('sesion1Fecha')||val('fecha')||(typeof today==='function'?today():new Date().toISOString().slice(0,10)), sesion1_detalle:val('sesion1Detalle')||val('detalle')||'',
+      requiere_sesion2:req2, requiere_sesion3:req3,
+      sesion2_fecha:val('sesion2Fecha')||null, sesion2_detalle:val('sesion2Detalle')||null,
+      sesion3_fecha:val('sesion3Fecha')||null, sesion3_detalle:val('sesion3Detalle')||null,
+      es_caso_alerta:val('esAlerta')==='Sí', tipo_alerta:val('tipoAlerta')||null, plazo_alerta:val('nivelAviso')||null,
+      motivo_alerta:val('motivoAlerta')||null, detalle_alerta:val('detalleAlerta')||null, dependencia_alerta:val('dependencia')||null,
+      created_by:SB().user.id, created_by_rol:currentRole()||'succor'
+    };
+    const r=await sb().from('orientaciones_beneficiario').insert(payload).select('id').single();
+    if(r.error) throw r.error;
+    return r.data;
+  }
+  async function insertProtocoloV76(b){
+    const req2=val('req2')==='Sí', req3=val('req3')==='Sí';
+    const payload={
+      dni:b.dni, region_id:b.region_id, fecha_registro:val('fecha')||(typeof today==='function'?today():new Date().toISOString().slice(0,10)), fecha_conocimiento:val('fecha')||(typeof today==='function'?today():new Date().toISOString().slice(0,10)),
+      protocolo_activado:val('tipoProt')||'Protocolo', detalle_caso:val('detalle')||'', detalle_orientacion:val('orientacionBrindada')||'', orientacion_brindada:val('orientacionBrindada')||'',
+      corresponde_oficio:val('oficio')==='Sí', fecha_envio_oficio:val('fechaOficio')||null, numero_oficio:val('numeroOficio')||null,
+      responsable_envio_oficio:val('responsableOficio')||currentName(), especialista_uccor_profesional:val('responsable')||currentName(), especialista_seguimiento:val('respSeguimiento')||currentName(),
+      estado:val('estadoProt')||'En seguimiento', requiere_continuar:req2, sesion_actual:1, created_by:SB().user.id, responsable_registro:currentName(), created_by_rol:currentRole()||'succor'
+    };
+    const r=await sb().from('protocolo_casos').insert(payload).select('id').single();
+    if(r.error) throw r.error;
+    const sesiones=[];
+    const hoy=typeof today==='function'?today():new Date().toISOString().slice(0,10);
+    if(val('sesion1Fecha')||val('sesion1Detalle')) sesiones.push({protocolo_id:r.data.id, numero_sesion:1, fecha_sesion:val('sesion1Fecha')||hoy, acciones_seguimiento:val('sesion1Detalle')||'Sesión inicial registrada', requiere_continuar_seguimiento:req2, requiere_continuar:req2, responsable_seguimiento:val('respSeguimiento')||currentName(), created_by:SB().user.id});
+    if(req2 && (val('sesion2Fecha')||val('sesion2Detalle'))) sesiones.push({protocolo_id:r.data.id, numero_sesion:2, fecha_sesion:val('sesion2Fecha')||hoy, acciones_seguimiento:val('sesion2Detalle')||'', requiere_continuar_seguimiento:req3, requiere_continuar:req3, responsable_seguimiento:val('respSeguimiento')||currentName(), created_by:SB().user.id});
+    if(req3 && (val('sesion3Fecha')||val('sesion3Detalle'))) sesiones.push({protocolo_id:r.data.id, numero_sesion:3, fecha_sesion:val('sesion3Fecha')||hoy, acciones_seguimiento:val('sesion3Detalle')||'', requiere_continuar_seguimiento:false, requiere_continuar:false, responsable_seguimiento:val('respSeguimiento')||currentName(), created_by:SB().user.id});
+    if(sesiones.length){const rs=await sb().from('protocolo_sesiones').insert(sesiones); if(rs.error) throw rs.error;}
+    return r.data;
+  }
+  window.createCase=async function(){
+    if(!activeSB()){
+      if(typeof previousCreateCase_V76==='function') return previousCreateCase_V76();
+      return;
+    }
+    try{
+      enforceScopeV76();
+      const b=state.validated;
+      if(!b) return toast('Valida el DNI','Primero valida el DNI del becario.');
+      if(!b.region_id) return toast('Región faltante','El padrón operativo no trae region_id para este DNI.');
+      if(state.intervention==='Alerta Académica') await insertAlertV76(b);
+      else if(state.intervention==='Protocolo') await insertProtocoloV76(b);
+      else await insertOrientacionV76(b);
+      if(typeof window.refreshSupabaseV74==='function') await window.refreshSupabaseV74();
+      toast('Registro guardado','El caso fue registrado en Supabase.');
+      if(typeof backToIntervention==='function') backToIntervention();
+      if(typeof showView==='function') showView('seguimiento');
+      if(typeof setFollowType==='function') setFollowType(state.intervention);
+      enforceScopeV76();
+    }catch(e){
+      console.error(e);
+      toast('No se pudo guardar', e.message||String(e));
+    }
+  };
+  const oldSetRole=window.setRole;
+  window.setRole=function(role){
+    if(SB().profile?.rol==='admin') role='admin';
+    const r=oldSetRole ? oldSetRole(role) : null;
+    setTimeout(enforceScopeV76,0);
+    return r;
+  };
+  const oldShowView=window.showView;
+  window.showView=function(){
+    const r=oldShowView ? oldShowView.apply(this,arguments) : null;
+    setTimeout(enforceScopeV76,0);
+    return r;
+  };
+  window.__enforceScopeV76=enforceScopeV76;
+  window.addEventListener('load',function(){
+    setTimeout(enrichRegionsForUser,800);
+    let n=0;
+    const timer=setInterval(function(){enforceScopeV76(); if(activeSB()) enrichRegionsForUser(); if(++n>90) clearInterval(timer);},1000);
+    const pill=document.querySelector('.region-pill');
+    if(pill && window.MutationObserver){
+      new MutationObserver(function(){setTimeout(enforceScopeV76,0);}).observe(pill,{childList:true,subtree:true,characterData:true});
+    }
+  });
+})();
+
 </script>
 </body>
 </html>
