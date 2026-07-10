@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Demo Local V67 Clínica SIBEN · Gestión del Seguimiento al Bienestar</title>
+  <title>SIBEN - Supabase Producción</title>
   <style>
     :root{
       --bg:#eaf2fb;--ink:#0f172a;--muted:#64748b;--navy:#071629;--navy2:#14243d;
@@ -733,8 +733,7 @@ body.supabase-connected .demo-warning{display:none!important}
         <button class="btn btn-ghost" onclick="setRole('monitora')">Vista Monitora</button>
         <button class="btn btn-ghost" onclick="setRole('admin')">Vista Admin</button>
         <button class="btn btn-primary" onclick="downloadConsolidado()">Descargar consolidado</button>
-        <button class="btn btn-red" onclick="resetDemo()">Reiniciar demo</button>
-        <div class="region-pill">Región<br><b>Lima</b></div>
+        <div class="region-pill">Ámbito<br><b>Pendiente</b></div>
         <div class="user-pill"><div id="avatar" class="avatar">S</div><div><strong id="userName">SUCCOR</strong><span id="userRole">Demo</span></div></div>
       </div>
     </div>
@@ -766,10 +765,10 @@ body.supabase-connected .demo-warning{display:none!important}
         <div class="side-footer">SIBEN v1.0<br>© PRONABEC 2026</div>
       </aside>
       <main class="main">
-        <section class="hero"><div><h2 id="mainTitle">Dashboard</h2><p id="mainSubtitle">Resumen operativo de cartera visible.</p></div><div class="scope-card"><b>Alcance visible</b><span id="statusScope">Lima</span></div></section>
+        <section class="hero"><div><h2 id="mainTitle">Dashboard</h2><p id="mainSubtitle">Resumen operativo de cartera visible.</p></div><div class="scope-card"><b>Alcance visible</b><span id="statusScope">Pendiente</span></div></section>
 
         <div id="viewDashboard">
-          <section class="section"><span class="kicker">Dashboard operativo</span><div class="section-head"><div><h3>Resumen de cartera asignada</h3><p class="sub">Lectura general según rol visible. Mantiene la lógica robusta de KPIs, gráfico circular y barras por región/estado.</p></div><div class="download-split"><button class="btn btn-soft" onclick="seedDemoCases()">Cargar casos demo</button><button class="btn btn-ghost" onclick="showView('registro')">Registrar caso</button></div></div>
+          <section class="section"><span class="kicker">Dashboard operativo</span><div class="section-head"><div><h3>Resumen de cartera asignada</h3><p class="sub">Lectura general según rol visible. Mantiene la lógica robusta de KPIs, gráfico circular y barras por región/estado.</p></div><div class="download-split"><button class="btn btn-ghost" onclick="showView('registro')">Registrar caso</button></div></div>
             <div class="grid-3"><div><label>Intervención</label><select id="dashInter" onchange="renderAll()"><option>Consolidado</option><option>Alerta Académica</option><option>Protocolo</option><option>Orientación</option></select></div><div><label>Región</label><select id="dashRegion" onchange="renderAll()"></select></div><div><label>Búsqueda</label><input id="dashSearch" oninput="renderAll()" placeholder="DNI, beneficiario, responsable" /></div></div>
             <div style="height:14px"></div><div id="kpiGrid" class="kpi-grid"></div>
             <div class="dash-grid-wide"><div class="chart-card"><h4>Intervención</h4><p>Distribución por módulo de atención.</p><div id="chartIntervencion"></div></div><div class="chart-card"><h4>Casos por región</h4><p>Regiones visibles según rol y filtros.</p><div id="chartRegion" class="chart-bars"></div></div></div>
@@ -1012,8 +1011,256 @@ else if(type==='Protocolo'){out=[['ID','DNI','Beneficiario','Región','IES','Car
 else {out=[['ID','DNI','Beneficiario','Edad','Sexo','Región','IES','Carrera','Modalidad','Tipo atención','Fecha orientación','Motivo','Detalle','Sesión 1 fecha','Sesión 1 detalle','Sesión 2 fecha','Sesión 2 detalle','Sesión 3 fecha','Sesión 3 detalle','Acta compromiso','Compromiso seguimiento','¿Es alerta?','Dependencia','Tipo alerta','Nivel aviso','Motivo alerta','Detalle alerta','Responsable','Estado','Evidencias'],...rows.map(c=>{const s=n=>(c.sesiones||[]).find(x=>x.n===n)||{};return [c.id,c.dni,c.beneficiario,c.edad,c.sexo,c.region,c.ies,c.carrera,c.modalidad,c.tipoAtencion,c.fechaConocimiento||c.fecha,c.motivo,c.detalle,s(1).fecha,s(1).detalle,s(2).fecha,s(2).detalle,s(3).fecha,s(3).detalle,c.acta,c.compromiso,c.esAlerta?'Sí':'No',c.dependencia,c.tipoAlerta,c.nivelAviso,c.motivoAlerta,c.detalleAlerta,c.responsable,c.estado,(c.evidencias||[]).map(e=>e.nombre).join('|')]})]}
 downloadFile(csv(out),type.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replaceAll(' ','_')+'_completo_demo.csv')}
 function downloadIESReport(){const rows=visibleCases();const ies=[...new Set(rows.map(x=>x.ies))];const out=[['IES','Región','Total casos','Alertas Académicas','Protocolo','Orientación','Pendientes','En seguimiento','Cerrados'],...ies.map(i=>{const r=rows.filter(x=>x.ies===i);return [i,r[0]?.region||'',r.length,r.filter(x=>x.tipo==='Alerta Académica').length,r.filter(x=>x.tipo==='Protocolo').length,r.filter(x=>x.tipo==='Orientación').length,r.filter(x=>x.estado==='Pendiente').length,r.filter(x=>x.estado==='En seguimiento').length,r.filter(x=>x.estado==='Cerrado').length]})];downloadFile(csv(out),'reporte_ies_demo.csv')}
-function printProtocol(cid){const c=state.cases.find(x=>x.id===cid);const w=window.open('','_blank');w.document.write(`<title>Ficha Protocolo</title><body style="font-family:Arial;padding:28px"><h1>Ficha de Protocolo</h1>${detailHTML(c)}<script>window.print()<\/script></body>`);w.document.close()}
-function printActa(cid){const c=state.cases.find(x=>x.id===cid);const w=window.open('','_blank');w.document.write(`<title>Acta de compromiso</title><body style="font-family:Arial;padding:28px"><h1>Acta de compromiso</h1><p><strong>Beneficiario:</strong> ${c.beneficiario}</p><p><strong>DNI:</strong> ${c.dni}</p><p><strong>Compromiso:</strong> ${c.acta||''}</p><p><strong>Seguimiento:</strong> ${c.compromiso||''}</p><script>window.print()<\/script></body>`);w.document.close()}
+function printProtocol(cid){const c=state.cases.find(x=>x.id===cid);const w=window.open('','_blank');w.document.write(`<title>Ficha Protocolo</title><body style="font-family:Arial;padding:28px"><h1>Ficha de Protocolo</h1>${detailHTML(c)}<script>window.print()<\/script>
+
+<!-- V77 PRODUCCIÓN: bloquea fallback demo/localStorage y usa Supabase como única fuente operativa -->
+<style id="siben-v77-production-css">
+  body.production-supabase-only button[onclick*="resetDemo"],
+  body.production-supabase-only button[onclick*="seedDemo"],
+  body.production-supabase-only button[onclick*="seedMass"],
+  body.production-supabase-only button[onclick*="seedBulk"],
+  body.production-supabase-only button[onclick*="seedAdminAlerts"],
+  body.production-supabase-only button[onclick*="seedSolicitudDemo"],
+  body.production-supabase-only .demo-warning{display:none!important}
+  body.production-supabase-only #supabaseConfigWarning{
+    border:1px solid #fecaca!important;background:#fff1f2!important;color:#991b1b!important;
+    border-radius:16px!important;padding:14px 16px!important;font-weight:850!important;margin-bottom:14px!important;
+  }
+  .production-required-card{border:1px solid #bfdbfe;background:#eff6ff;color:#0f2d67;border-radius:16px;padding:14px 16px;font-weight:800;margin-bottom:14px}
+</style>
+<script id="siben-v77-production-only">
+(function(){
+  document.body.classList.add('production-supabase-only');
+  function q(id){return (typeof qs==='function'?qs(id):document.getElementById(id));}
+  function safe(v){return String(v==null?'':v);}
+  function esc(v){return safe(v).replace(/[&<>\"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m];});}
+  function cfgOk(){
+    const c=window.SIBEN_SUPABASE_CONFIG||{};
+    return !!(c.url && c.anonKey && !safe(c.url).includes('PEGAR_') && !safe(c.anonKey).includes('PEGAR_'));
+  }
+  function sbActive(){
+    return !!(window.SIBEN_SB && window.SIBEN_SB.enabled && window.SIBEN_SB.user && window.sibenSupabaseClient);
+  }
+  function role(){return (window.SIBEN_SB && window.SIBEN_SB.profile && window.SIBEN_SB.profile.rol) || '';}
+  function regionNames(){
+    const SB=window.SIBEN_SB||{};
+    const ids=(SB.regionIds||[]).map(String);
+    return (SB.regiones||[]).filter(function(r){return ids.includes(String(r.id));}).map(function(r){return r.nombre;});
+  }
+  function scopeText(){
+    const r=role();
+    if(r==='admin') return 'Nacional';
+    const regs=regionNames();
+    return regs.length?regs.join(', '):(sbActive()?'Ámbito asignado':'Pendiente');
+  }
+  function enforceProductionScope(){
+    const scope=scopeText();
+    const r=role();
+    const pill=document.querySelector('.region-pill');
+    if(pill){
+      const label=r==='admin'?'Ámbito':((window.SIBEN_SB?.regionIds||[]).length>1?'Regiones':'Región');
+      pill.innerHTML=label+'<br><b>'+esc(scope)+'</b>';
+    }
+    if(q('statusScope')) q('statusScope').textContent=scope;
+    if(q('scopePill')) q('scopePill').textContent='Ámbito: '+scope;
+    if(q('userRole') && r) q('userRole').textContent=r.toUpperCase();
+  }
+  function toastBlock(title,msg){
+    if(typeof toast==='function') toast(title,msg);
+    else alert(title+'\n'+msg);
+  }
+  function requireSupabase(action){
+    if(!cfgOk()){
+      toastBlock('Supabase no configurado','Completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML. Esta versión no usa demo local.');
+      return false;
+    }
+    if(!sbActive()){
+      toastBlock('Sesión requerida','Inicia sesión con Supabase Auth para '+(action||'continuar')+'. Esta versión no usa demo local.');
+      return false;
+    }
+    return true;
+  }
+  function removeDemoButtons(){
+    document.querySelectorAll('button').forEach(function(b){
+      const oc=b.getAttribute('onclick')||'';
+      const tx=(b.textContent||'').toLowerCase();
+      if(/resetdemo|seeddemo|seedmass|seedbulk|seedadminalerts|seedsolicituddemo/i.test(oc) || tx.includes('demo')){
+        b.remove();
+      }
+    });
+  }
+  function productionNotice(){
+    const main=document.querySelector('#viewRegistro .section') || document.querySelector('.main');
+    if(!main) return;
+    let n=document.getElementById('productionRequiredNotice');
+    if(cfgOk()){
+      if(n) n.remove();
+      return;
+    }
+    if(!n){
+      n=document.createElement('div');
+      n.id='productionRequiredNotice';
+      n.className='production-required-card';
+      n.innerHTML='Versión producción: coloca la URL y anon key pública de Supabase en <b>SIBEN_SUPABASE_CONFIG</b>. No se usará base demo ni localStorage para registrar casos.';
+      main.prepend(n);
+    }
+  }
+  const oldValidate=window.validateDNI;
+  window.validateDNI=function(){
+    if(!requireSupabase('validar DNI')) return;
+    return oldValidate.apply(this,arguments);
+  };
+  const oldCreate=window.createCase;
+  window.createCase=function(){
+    if(!requireSupabase('registrar casos')) return;
+    return oldCreate.apply(this,arguments);
+  };
+  const oldDownload=window.downloadConsolidado;
+  window.downloadConsolidado=function(){
+    if(!requireSupabase('descargar consolidado')) return;
+    return oldDownload.apply(this,arguments);
+  };
+  window.resetDemo=window.seedDemoCases=window.seedMassForIntervention=window.seedBulkUpdateDemo=window.seedSolicitudDemo=function(){
+    toastBlock('Acción deshabilitada','Esta versión es de producción y no usa datos demo.');
+  };
+  window.seedAdminAlertsForDistributionV68=window.seedAdminAlertsForDistribution=function(){
+    toastBlock('Acción deshabilitada','La distribución debe trabajar con alertas reales de Supabase.');
+  };
+  window.__sibenProductionReadyV77=function(){return {configured:cfgOk(), connected:sbActive(), role:role(), scope:scopeText()};};
+  window.addEventListener('load',function(){
+    removeDemoButtons(); productionNotice(); enforceProductionScope();
+    let n=0; const t=setInterval(function(){removeDemoButtons(); productionNotice(); enforceProductionScope(); if(++n>120) clearInterval(t);},500);
+  });
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){removeDemoButtons(); enforceProductionScope();}});
+})();
+</script>
+
+</body>`);w.document.close()}
+function printActa(cid){const c=state.cases.find(x=>x.id===cid);const w=window.open('','_blank');w.document.write(`<title>Acta de compromiso</title><body style="font-family:Arial;padding:28px"><h1>Acta de compromiso</h1><p><strong>Beneficiario:</strong> ${c.beneficiario}</p><p><strong>DNI:</strong> ${c.dni}</p><p><strong>Compromiso:</strong> ${c.acta||''}</p><p><strong>Seguimiento:</strong> ${c.compromiso||''}</p><script>window.print()<\/script>
+
+<!-- V77 PRODUCCIÓN: bloquea fallback demo/localStorage y usa Supabase como única fuente operativa -->
+<style id="siben-v77-production-css">
+  body.production-supabase-only button[onclick*="resetDemo"],
+  body.production-supabase-only button[onclick*="seedDemo"],
+  body.production-supabase-only button[onclick*="seedMass"],
+  body.production-supabase-only button[onclick*="seedBulk"],
+  body.production-supabase-only button[onclick*="seedAdminAlerts"],
+  body.production-supabase-only button[onclick*="seedSolicitudDemo"],
+  body.production-supabase-only .demo-warning{display:none!important}
+  body.production-supabase-only #supabaseConfigWarning{
+    border:1px solid #fecaca!important;background:#fff1f2!important;color:#991b1b!important;
+    border-radius:16px!important;padding:14px 16px!important;font-weight:850!important;margin-bottom:14px!important;
+  }
+  .production-required-card{border:1px solid #bfdbfe;background:#eff6ff;color:#0f2d67;border-radius:16px;padding:14px 16px;font-weight:800;margin-bottom:14px}
+</style>
+<script id="siben-v77-production-only">
+(function(){
+  document.body.classList.add('production-supabase-only');
+  function q(id){return (typeof qs==='function'?qs(id):document.getElementById(id));}
+  function safe(v){return String(v==null?'':v);}
+  function esc(v){return safe(v).replace(/[&<>\"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m];});}
+  function cfgOk(){
+    const c=window.SIBEN_SUPABASE_CONFIG||{};
+    return !!(c.url && c.anonKey && !safe(c.url).includes('PEGAR_') && !safe(c.anonKey).includes('PEGAR_'));
+  }
+  function sbActive(){
+    return !!(window.SIBEN_SB && window.SIBEN_SB.enabled && window.SIBEN_SB.user && window.sibenSupabaseClient);
+  }
+  function role(){return (window.SIBEN_SB && window.SIBEN_SB.profile && window.SIBEN_SB.profile.rol) || '';}
+  function regionNames(){
+    const SB=window.SIBEN_SB||{};
+    const ids=(SB.regionIds||[]).map(String);
+    return (SB.regiones||[]).filter(function(r){return ids.includes(String(r.id));}).map(function(r){return r.nombre;});
+  }
+  function scopeText(){
+    const r=role();
+    if(r==='admin') return 'Nacional';
+    const regs=regionNames();
+    return regs.length?regs.join(', '):(sbActive()?'Ámbito asignado':'Pendiente');
+  }
+  function enforceProductionScope(){
+    const scope=scopeText();
+    const r=role();
+    const pill=document.querySelector('.region-pill');
+    if(pill){
+      const label=r==='admin'?'Ámbito':((window.SIBEN_SB?.regionIds||[]).length>1?'Regiones':'Región');
+      pill.innerHTML=label+'<br><b>'+esc(scope)+'</b>';
+    }
+    if(q('statusScope')) q('statusScope').textContent=scope;
+    if(q('scopePill')) q('scopePill').textContent='Ámbito: '+scope;
+    if(q('userRole') && r) q('userRole').textContent=r.toUpperCase();
+  }
+  function toastBlock(title,msg){
+    if(typeof toast==='function') toast(title,msg);
+    else alert(title+'\n'+msg);
+  }
+  function requireSupabase(action){
+    if(!cfgOk()){
+      toastBlock('Supabase no configurado','Completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML. Esta versión no usa demo local.');
+      return false;
+    }
+    if(!sbActive()){
+      toastBlock('Sesión requerida','Inicia sesión con Supabase Auth para '+(action||'continuar')+'. Esta versión no usa demo local.');
+      return false;
+    }
+    return true;
+  }
+  function removeDemoButtons(){
+    document.querySelectorAll('button').forEach(function(b){
+      const oc=b.getAttribute('onclick')||'';
+      const tx=(b.textContent||'').toLowerCase();
+      if(/resetdemo|seeddemo|seedmass|seedbulk|seedadminalerts|seedsolicituddemo/i.test(oc) || tx.includes('demo')){
+        b.remove();
+      }
+    });
+  }
+  function productionNotice(){
+    const main=document.querySelector('#viewRegistro .section') || document.querySelector('.main');
+    if(!main) return;
+    let n=document.getElementById('productionRequiredNotice');
+    if(cfgOk()){
+      if(n) n.remove();
+      return;
+    }
+    if(!n){
+      n=document.createElement('div');
+      n.id='productionRequiredNotice';
+      n.className='production-required-card';
+      n.innerHTML='Versión producción: coloca la URL y anon key pública de Supabase en <b>SIBEN_SUPABASE_CONFIG</b>. No se usará base demo ni localStorage para registrar casos.';
+      main.prepend(n);
+    }
+  }
+  const oldValidate=window.validateDNI;
+  window.validateDNI=function(){
+    if(!requireSupabase('validar DNI')) return;
+    return oldValidate.apply(this,arguments);
+  };
+  const oldCreate=window.createCase;
+  window.createCase=function(){
+    if(!requireSupabase('registrar casos')) return;
+    return oldCreate.apply(this,arguments);
+  };
+  const oldDownload=window.downloadConsolidado;
+  window.downloadConsolidado=function(){
+    if(!requireSupabase('descargar consolidado')) return;
+    return oldDownload.apply(this,arguments);
+  };
+  window.resetDemo=window.seedDemoCases=window.seedMassForIntervention=window.seedBulkUpdateDemo=window.seedSolicitudDemo=function(){
+    toastBlock('Acción deshabilitada','Esta versión es de producción y no usa datos demo.');
+  };
+  window.seedAdminAlertsForDistributionV68=window.seedAdminAlertsForDistribution=function(){
+    toastBlock('Acción deshabilitada','La distribución debe trabajar con alertas reales de Supabase.');
+  };
+  window.__sibenProductionReadyV77=function(){return {configured:cfgOk(), connected:sbActive(), role:role(), scope:scopeText()};};
+  window.addEventListener('load',function(){
+    removeDemoButtons(); productionNotice(); enforceProductionScope();
+    let n=0; const t=setInterval(function(){removeDemoButtons(); productionNotice(); enforceProductionScope(); if(++n>120) clearInterval(t);},500);
+  });
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){removeDemoButtons(); enforceProductionScope();}});
+})();
+</script>
+
+</body>`);w.document.close()}
 
 window.addEventListener('load',()=>{load();setRole('succor');showView('registro')});
 
@@ -1305,7 +1552,131 @@ function downloadHistorialPDF(){
 .history-search-head{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(420px,620px)!important;align-items:end!important;gap:16px!important;margin-bottom:8px!important}.history-title-block h3{font-size:21px!important;margin:0!important}.history-title-block .sub{max-width:720px!important}.siben-hist-search{display:grid!important;grid-template-columns:minmax(180px,1fr) 112px 92px!important;gap:8px!important;align-items:end!important;margin:0!important}.siben-hist-search input{height:40px!important;font-size:14px!important;pointer-events:auto!important;user-select:text!important;z-index:2!important}.siben-hist-search .btn{height:40px!important;padding:0 12px!important;font-size:12px!important}.siben-history-section{padding:15px!important}.beneficiary-hero{grid-template-columns:94px minmax(0,1fr) auto!important;gap:18px!important;padding:15px!important;border-radius:16px!important;align-items:center!important}.beneficiary-photo{width:78px!important;height:78px!important;border-radius:19px!important;font-size:34px!important}.beneficiary-name{font-size:20px!important;margin-bottom:8px!important}.beneficiary-meta{grid-template-columns:repeat(4,minmax(112px,1fr))!important;gap:10px 20px!important}.beneficiary-meta b{font-size:10px!important}.beneficiary-meta span{font-size:12.5px!important}.history-layout{grid-template-columns:288px minmax(0,1fr)!important;gap:12px!important;margin-top:12px!important}.info-card,.timeline-card{padding:14px!important;border-radius:14px!important}.info-card h4,.timeline-card h4{font-size:14.5px!important;margin-bottom:10px!important}.history-tabs{gap:6px!important;margin-bottom:12px!important;overflow:auto!important;flex-wrap:nowrap!important}.history-tab{padding:9px 11px!important;font-size:12.5px!important;white-space:nowrap!important;border:1px solid transparent!important}.history-tab:hover{border-color:#cbdff4!important;background:#f4f8fd!important}.history-tab.active{background:#073b78!important;color:#fff!important}.timeline-list{gap:8px!important}.timeline-row{grid-template-columns:34px minmax(0,1fr) 108px 108px!important;gap:10px!important;padding:10px!important}.timeline-row .sub{font-size:12px!important}.timeline-icon{width:32px!important;height:32px!important;font-size:13px!important;color:#fff!important;display:grid!important;place-items:center!important;font-weight:900!important}.history-card{border:1px solid #dce6f1;border-radius:14px;background:#fff;padding:12px;margin-bottom:9px}.history-card h5{font-size:14px;margin:0 0 7px;color:#082b56}.history-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.history-card-grid div{border:1px solid #e6edf5;border-radius:10px;background:#f8fbff;padding:8px}.history-card-grid b{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:#64748b}.history-card-grid span{display:block;font-size:12.5px;font-weight:800;color:#0f172a}.summary-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}.summary-pill-card{border:1px solid #dce6f1;border-radius:14px;background:#fff;padding:12px}.summary-pill-card b{display:block;font-size:10px;text-transform:uppercase;color:#64748b}.summary-pill-card strong{display:block;font-size:24px;color:#073b78;margin-top:4px}.evidence-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #dbeafe;background:#f1f7ff;color:#075a9e;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;margin:3px;cursor:pointer}.pdf-small{height:32px!important;padding:0 12px!important}.table-box th,.table-box td{vertical-align:top!important}
 @media(max-width:1180px){.siben-topbar.shell{grid-template-columns:1fr!important;height:auto!important;padding:10px!important}.global-search{width:100%!important}.shell.layout{grid-template-columns:1fr!important;padding:0 10px!important}.siben-sidebar{position:relative!important;top:auto!important;border-radius:18px!important;min-height:auto!important}.history-search-head{grid-template-columns:1fr!important}.siben-hist-search{grid-template-columns:1fr auto auto!important}.history-layout{grid-template-columns:1fr!important}.beneficiary-hero{grid-template-columns:1fr!important}.beneficiary-meta{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
-</style></head><body><h1>Ficha resumen del beneficiario</h1>${mount.innerHTML}</body></html>`);
+</style></head><body><h1>Ficha resumen del beneficiario</h1>${mount.innerHTML}
+
+<!-- V77 PRODUCCIÓN: bloquea fallback demo/localStorage y usa Supabase como única fuente operativa -->
+<style id="siben-v77-production-css">
+  body.production-supabase-only button[onclick*="resetDemo"],
+  body.production-supabase-only button[onclick*="seedDemo"],
+  body.production-supabase-only button[onclick*="seedMass"],
+  body.production-supabase-only button[onclick*="seedBulk"],
+  body.production-supabase-only button[onclick*="seedAdminAlerts"],
+  body.production-supabase-only button[onclick*="seedSolicitudDemo"],
+  body.production-supabase-only .demo-warning{display:none!important}
+  body.production-supabase-only #supabaseConfigWarning{
+    border:1px solid #fecaca!important;background:#fff1f2!important;color:#991b1b!important;
+    border-radius:16px!important;padding:14px 16px!important;font-weight:850!important;margin-bottom:14px!important;
+  }
+  .production-required-card{border:1px solid #bfdbfe;background:#eff6ff;color:#0f2d67;border-radius:16px;padding:14px 16px;font-weight:800;margin-bottom:14px}
+</style>
+<script id="siben-v77-production-only">
+(function(){
+  document.body.classList.add('production-supabase-only');
+  function q(id){return (typeof qs==='function'?qs(id):document.getElementById(id));}
+  function safe(v){return String(v==null?'':v);}
+  function esc(v){return safe(v).replace(/[&<>\"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m];});}
+  function cfgOk(){
+    const c=window.SIBEN_SUPABASE_CONFIG||{};
+    return !!(c.url && c.anonKey && !safe(c.url).includes('PEGAR_') && !safe(c.anonKey).includes('PEGAR_'));
+  }
+  function sbActive(){
+    return !!(window.SIBEN_SB && window.SIBEN_SB.enabled && window.SIBEN_SB.user && window.sibenSupabaseClient);
+  }
+  function role(){return (window.SIBEN_SB && window.SIBEN_SB.profile && window.SIBEN_SB.profile.rol) || '';}
+  function regionNames(){
+    const SB=window.SIBEN_SB||{};
+    const ids=(SB.regionIds||[]).map(String);
+    return (SB.regiones||[]).filter(function(r){return ids.includes(String(r.id));}).map(function(r){return r.nombre;});
+  }
+  function scopeText(){
+    const r=role();
+    if(r==='admin') return 'Nacional';
+    const regs=regionNames();
+    return regs.length?regs.join(', '):(sbActive()?'Ámbito asignado':'Pendiente');
+  }
+  function enforceProductionScope(){
+    const scope=scopeText();
+    const r=role();
+    const pill=document.querySelector('.region-pill');
+    if(pill){
+      const label=r==='admin'?'Ámbito':((window.SIBEN_SB?.regionIds||[]).length>1?'Regiones':'Región');
+      pill.innerHTML=label+'<br><b>'+esc(scope)+'</b>';
+    }
+    if(q('statusScope')) q('statusScope').textContent=scope;
+    if(q('scopePill')) q('scopePill').textContent='Ámbito: '+scope;
+    if(q('userRole') && r) q('userRole').textContent=r.toUpperCase();
+  }
+  function toastBlock(title,msg){
+    if(typeof toast==='function') toast(title,msg);
+    else alert(title+'\n'+msg);
+  }
+  function requireSupabase(action){
+    if(!cfgOk()){
+      toastBlock('Supabase no configurado','Completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML. Esta versión no usa demo local.');
+      return false;
+    }
+    if(!sbActive()){
+      toastBlock('Sesión requerida','Inicia sesión con Supabase Auth para '+(action||'continuar')+'. Esta versión no usa demo local.');
+      return false;
+    }
+    return true;
+  }
+  function removeDemoButtons(){
+    document.querySelectorAll('button').forEach(function(b){
+      const oc=b.getAttribute('onclick')||'';
+      const tx=(b.textContent||'').toLowerCase();
+      if(/resetdemo|seeddemo|seedmass|seedbulk|seedadminalerts|seedsolicituddemo/i.test(oc) || tx.includes('demo')){
+        b.remove();
+      }
+    });
+  }
+  function productionNotice(){
+    const main=document.querySelector('#viewRegistro .section') || document.querySelector('.main');
+    if(!main) return;
+    let n=document.getElementById('productionRequiredNotice');
+    if(cfgOk()){
+      if(n) n.remove();
+      return;
+    }
+    if(!n){
+      n=document.createElement('div');
+      n.id='productionRequiredNotice';
+      n.className='production-required-card';
+      n.innerHTML='Versión producción: coloca la URL y anon key pública de Supabase en <b>SIBEN_SUPABASE_CONFIG</b>. No se usará base demo ni localStorage para registrar casos.';
+      main.prepend(n);
+    }
+  }
+  const oldValidate=window.validateDNI;
+  window.validateDNI=function(){
+    if(!requireSupabase('validar DNI')) return;
+    return oldValidate.apply(this,arguments);
+  };
+  const oldCreate=window.createCase;
+  window.createCase=function(){
+    if(!requireSupabase('registrar casos')) return;
+    return oldCreate.apply(this,arguments);
+  };
+  const oldDownload=window.downloadConsolidado;
+  window.downloadConsolidado=function(){
+    if(!requireSupabase('descargar consolidado')) return;
+    return oldDownload.apply(this,arguments);
+  };
+  window.resetDemo=window.seedDemoCases=window.seedMassForIntervention=window.seedBulkUpdateDemo=window.seedSolicitudDemo=function(){
+    toastBlock('Acción deshabilitada','Esta versión es de producción y no usa datos demo.');
+  };
+  window.seedAdminAlertsForDistributionV68=window.seedAdminAlertsForDistribution=function(){
+    toastBlock('Acción deshabilitada','La distribución debe trabajar con alertas reales de Supabase.');
+  };
+  window.__sibenProductionReadyV77=function(){return {configured:cfgOk(), connected:sbActive(), role:role(), scope:scopeText()};};
+  window.addEventListener('load',function(){
+    removeDemoButtons(); productionNotice(); enforceProductionScope();
+    let n=0; const t=setInterval(function(){removeDemoButtons(); productionNotice(); enforceProductionScope(); if(++n>120) clearInterval(t);},500);
+  });
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){removeDemoButtons(); enforceProductionScope();}});
+})();
+</script>
+
+</body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 
@@ -1457,7 +1828,131 @@ function downloadHistorialPDF(){
 .history-search-head{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(420px,620px)!important;align-items:end!important;gap:16px!important;margin-bottom:8px!important}.history-title-block h3{font-size:21px!important;margin:0!important}.history-title-block .sub{max-width:720px!important}.siben-hist-search{display:grid!important;grid-template-columns:minmax(180px,1fr) 112px 92px!important;gap:8px!important;align-items:end!important;margin:0!important}.siben-hist-search input{height:40px!important;font-size:14px!important;pointer-events:auto!important;user-select:text!important;z-index:2!important}.siben-hist-search .btn{height:40px!important;padding:0 12px!important;font-size:12px!important}.siben-history-section{padding:15px!important}.beneficiary-hero{grid-template-columns:94px minmax(0,1fr) auto!important;gap:18px!important;padding:15px!important;border-radius:16px!important;align-items:center!important}.beneficiary-photo{width:78px!important;height:78px!important;border-radius:19px!important;font-size:34px!important}.beneficiary-name{font-size:20px!important;margin-bottom:8px!important}.beneficiary-meta{grid-template-columns:repeat(4,minmax(112px,1fr))!important;gap:10px 20px!important}.beneficiary-meta b{font-size:10px!important}.beneficiary-meta span{font-size:12.5px!important}.history-layout{grid-template-columns:288px minmax(0,1fr)!important;gap:12px!important;margin-top:12px!important}.info-card,.timeline-card{padding:14px!important;border-radius:14px!important}.info-card h4,.timeline-card h4{font-size:14.5px!important;margin-bottom:10px!important}.history-tabs{gap:6px!important;margin-bottom:12px!important;overflow:auto!important;flex-wrap:nowrap!important}.history-tab{padding:9px 11px!important;font-size:12.5px!important;white-space:nowrap!important;border:1px solid transparent!important}.history-tab:hover{border-color:#cbdff4!important;background:#f4f8fd!important}.history-tab.active{background:#073b78!important;color:#fff!important}.timeline-list{gap:8px!important}.timeline-row{grid-template-columns:34px minmax(0,1fr) 108px 108px!important;gap:10px!important;padding:10px!important}.timeline-row .sub{font-size:12px!important}.timeline-icon{width:32px!important;height:32px!important;font-size:13px!important;color:#fff!important;display:grid!important;place-items:center!important;font-weight:900!important}.history-card{border:1px solid #dce6f1;border-radius:14px;background:#fff;padding:12px;margin-bottom:9px}.history-card h5{font-size:14px;margin:0 0 7px;color:#082b56}.history-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.history-card-grid div{border:1px solid #e6edf5;border-radius:10px;background:#f8fbff;padding:8px}.history-card-grid b{display:block;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:#64748b}.history-card-grid span{display:block;font-size:12.5px;font-weight:800;color:#0f172a}.summary-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}.summary-pill-card{border:1px solid #dce6f1;border-radius:14px;background:#fff;padding:12px}.summary-pill-card b{display:block;font-size:10px;text-transform:uppercase;color:#64748b}.summary-pill-card strong{display:block;font-size:24px;color:#073b78;margin-top:4px}.evidence-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #dbeafe;background:#f1f7ff;color:#075a9e;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;margin:3px;cursor:pointer}.pdf-small{height:32px!important;padding:0 12px!important}.table-box th,.table-box td{vertical-align:top!important}
 @media(max-width:1180px){.siben-topbar.shell{grid-template-columns:1fr!important;height:auto!important;padding:10px!important}.global-search{width:100%!important}.shell.layout{grid-template-columns:1fr!important;padding:0 10px!important}.siben-sidebar{position:relative!important;top:auto!important;border-radius:18px!important;min-height:auto!important}.history-search-head{grid-template-columns:1fr!important}.siben-hist-search{grid-template-columns:1fr auto auto!important}.history-layout{grid-template-columns:1fr!important}.beneficiary-hero{grid-template-columns:1fr!important}.beneficiary-meta{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
-</style></head><body><h1>Ficha resumen del beneficiario</h1>${mount.innerHTML}</body></html>`);
+</style></head><body><h1>Ficha resumen del beneficiario</h1>${mount.innerHTML}
+
+<!-- V77 PRODUCCIÓN: bloquea fallback demo/localStorage y usa Supabase como única fuente operativa -->
+<style id="siben-v77-production-css">
+  body.production-supabase-only button[onclick*="resetDemo"],
+  body.production-supabase-only button[onclick*="seedDemo"],
+  body.production-supabase-only button[onclick*="seedMass"],
+  body.production-supabase-only button[onclick*="seedBulk"],
+  body.production-supabase-only button[onclick*="seedAdminAlerts"],
+  body.production-supabase-only button[onclick*="seedSolicitudDemo"],
+  body.production-supabase-only .demo-warning{display:none!important}
+  body.production-supabase-only #supabaseConfigWarning{
+    border:1px solid #fecaca!important;background:#fff1f2!important;color:#991b1b!important;
+    border-radius:16px!important;padding:14px 16px!important;font-weight:850!important;margin-bottom:14px!important;
+  }
+  .production-required-card{border:1px solid #bfdbfe;background:#eff6ff;color:#0f2d67;border-radius:16px;padding:14px 16px;font-weight:800;margin-bottom:14px}
+</style>
+<script id="siben-v77-production-only">
+(function(){
+  document.body.classList.add('production-supabase-only');
+  function q(id){return (typeof qs==='function'?qs(id):document.getElementById(id));}
+  function safe(v){return String(v==null?'':v);}
+  function esc(v){return safe(v).replace(/[&<>\"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m];});}
+  function cfgOk(){
+    const c=window.SIBEN_SUPABASE_CONFIG||{};
+    return !!(c.url && c.anonKey && !safe(c.url).includes('PEGAR_') && !safe(c.anonKey).includes('PEGAR_'));
+  }
+  function sbActive(){
+    return !!(window.SIBEN_SB && window.SIBEN_SB.enabled && window.SIBEN_SB.user && window.sibenSupabaseClient);
+  }
+  function role(){return (window.SIBEN_SB && window.SIBEN_SB.profile && window.SIBEN_SB.profile.rol) || '';}
+  function regionNames(){
+    const SB=window.SIBEN_SB||{};
+    const ids=(SB.regionIds||[]).map(String);
+    return (SB.regiones||[]).filter(function(r){return ids.includes(String(r.id));}).map(function(r){return r.nombre;});
+  }
+  function scopeText(){
+    const r=role();
+    if(r==='admin') return 'Nacional';
+    const regs=regionNames();
+    return regs.length?regs.join(', '):(sbActive()?'Ámbito asignado':'Pendiente');
+  }
+  function enforceProductionScope(){
+    const scope=scopeText();
+    const r=role();
+    const pill=document.querySelector('.region-pill');
+    if(pill){
+      const label=r==='admin'?'Ámbito':((window.SIBEN_SB?.regionIds||[]).length>1?'Regiones':'Región');
+      pill.innerHTML=label+'<br><b>'+esc(scope)+'</b>';
+    }
+    if(q('statusScope')) q('statusScope').textContent=scope;
+    if(q('scopePill')) q('scopePill').textContent='Ámbito: '+scope;
+    if(q('userRole') && r) q('userRole').textContent=r.toUpperCase();
+  }
+  function toastBlock(title,msg){
+    if(typeof toast==='function') toast(title,msg);
+    else alert(title+'\n'+msg);
+  }
+  function requireSupabase(action){
+    if(!cfgOk()){
+      toastBlock('Supabase no configurado','Completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML. Esta versión no usa demo local.');
+      return false;
+    }
+    if(!sbActive()){
+      toastBlock('Sesión requerida','Inicia sesión con Supabase Auth para '+(action||'continuar')+'. Esta versión no usa demo local.');
+      return false;
+    }
+    return true;
+  }
+  function removeDemoButtons(){
+    document.querySelectorAll('button').forEach(function(b){
+      const oc=b.getAttribute('onclick')||'';
+      const tx=(b.textContent||'').toLowerCase();
+      if(/resetdemo|seeddemo|seedmass|seedbulk|seedadminalerts|seedsolicituddemo/i.test(oc) || tx.includes('demo')){
+        b.remove();
+      }
+    });
+  }
+  function productionNotice(){
+    const main=document.querySelector('#viewRegistro .section') || document.querySelector('.main');
+    if(!main) return;
+    let n=document.getElementById('productionRequiredNotice');
+    if(cfgOk()){
+      if(n) n.remove();
+      return;
+    }
+    if(!n){
+      n=document.createElement('div');
+      n.id='productionRequiredNotice';
+      n.className='production-required-card';
+      n.innerHTML='Versión producción: coloca la URL y anon key pública de Supabase en <b>SIBEN_SUPABASE_CONFIG</b>. No se usará base demo ni localStorage para registrar casos.';
+      main.prepend(n);
+    }
+  }
+  const oldValidate=window.validateDNI;
+  window.validateDNI=function(){
+    if(!requireSupabase('validar DNI')) return;
+    return oldValidate.apply(this,arguments);
+  };
+  const oldCreate=window.createCase;
+  window.createCase=function(){
+    if(!requireSupabase('registrar casos')) return;
+    return oldCreate.apply(this,arguments);
+  };
+  const oldDownload=window.downloadConsolidado;
+  window.downloadConsolidado=function(){
+    if(!requireSupabase('descargar consolidado')) return;
+    return oldDownload.apply(this,arguments);
+  };
+  window.resetDemo=window.seedDemoCases=window.seedMassForIntervention=window.seedBulkUpdateDemo=window.seedSolicitudDemo=function(){
+    toastBlock('Acción deshabilitada','Esta versión es de producción y no usa datos demo.');
+  };
+  window.seedAdminAlertsForDistributionV68=window.seedAdminAlertsForDistribution=function(){
+    toastBlock('Acción deshabilitada','La distribución debe trabajar con alertas reales de Supabase.');
+  };
+  window.__sibenProductionReadyV77=function(){return {configured:cfgOk(), connected:sbActive(), role:role(), scope:scopeText()};};
+  window.addEventListener('load',function(){
+    removeDemoButtons(); productionNotice(); enforceProductionScope();
+    let n=0; const t=setInterval(function(){removeDemoButtons(); productionNotice(); enforceProductionScope(); if(++n>120) clearInterval(t);},500);
+  });
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){removeDemoButtons(); enforceProductionScope();}});
+})();
+</script>
+
+</body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 
@@ -1606,7 +2101,131 @@ function downloadHistorialPDF(){
   const html=printableHistoryHTML();
   if(!html) return toast('Busca un DNI','Primero realiza la búsqueda del beneficiario.');
   const w=window.open('','_blank');
-  w.document.write(`<html><head><title>Ficha Historial Beneficiario</title><style>${cleanPrintStyles()}</style></head><body>${html}<script>setTimeout(()=>window.print(),250)<\/script></body></html>`);
+  w.document.write(`<html><head><title>Ficha Historial Beneficiario</title><style>${cleanPrintStyles()}</style></head><body>${html}<script>setTimeout(()=>window.print(),250)<\/script>
+
+<!-- V77 PRODUCCIÓN: bloquea fallback demo/localStorage y usa Supabase como única fuente operativa -->
+<style id="siben-v77-production-css">
+  body.production-supabase-only button[onclick*="resetDemo"],
+  body.production-supabase-only button[onclick*="seedDemo"],
+  body.production-supabase-only button[onclick*="seedMass"],
+  body.production-supabase-only button[onclick*="seedBulk"],
+  body.production-supabase-only button[onclick*="seedAdminAlerts"],
+  body.production-supabase-only button[onclick*="seedSolicitudDemo"],
+  body.production-supabase-only .demo-warning{display:none!important}
+  body.production-supabase-only #supabaseConfigWarning{
+    border:1px solid #fecaca!important;background:#fff1f2!important;color:#991b1b!important;
+    border-radius:16px!important;padding:14px 16px!important;font-weight:850!important;margin-bottom:14px!important;
+  }
+  .production-required-card{border:1px solid #bfdbfe;background:#eff6ff;color:#0f2d67;border-radius:16px;padding:14px 16px;font-weight:800;margin-bottom:14px}
+</style>
+<script id="siben-v77-production-only">
+(function(){
+  document.body.classList.add('production-supabase-only');
+  function q(id){return (typeof qs==='function'?qs(id):document.getElementById(id));}
+  function safe(v){return String(v==null?'':v);}
+  function esc(v){return safe(v).replace(/[&<>\"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m];});}
+  function cfgOk(){
+    const c=window.SIBEN_SUPABASE_CONFIG||{};
+    return !!(c.url && c.anonKey && !safe(c.url).includes('PEGAR_') && !safe(c.anonKey).includes('PEGAR_'));
+  }
+  function sbActive(){
+    return !!(window.SIBEN_SB && window.SIBEN_SB.enabled && window.SIBEN_SB.user && window.sibenSupabaseClient);
+  }
+  function role(){return (window.SIBEN_SB && window.SIBEN_SB.profile && window.SIBEN_SB.profile.rol) || '';}
+  function regionNames(){
+    const SB=window.SIBEN_SB||{};
+    const ids=(SB.regionIds||[]).map(String);
+    return (SB.regiones||[]).filter(function(r){return ids.includes(String(r.id));}).map(function(r){return r.nombre;});
+  }
+  function scopeText(){
+    const r=role();
+    if(r==='admin') return 'Nacional';
+    const regs=regionNames();
+    return regs.length?regs.join(', '):(sbActive()?'Ámbito asignado':'Pendiente');
+  }
+  function enforceProductionScope(){
+    const scope=scopeText();
+    const r=role();
+    const pill=document.querySelector('.region-pill');
+    if(pill){
+      const label=r==='admin'?'Ámbito':((window.SIBEN_SB?.regionIds||[]).length>1?'Regiones':'Región');
+      pill.innerHTML=label+'<br><b>'+esc(scope)+'</b>';
+    }
+    if(q('statusScope')) q('statusScope').textContent=scope;
+    if(q('scopePill')) q('scopePill').textContent='Ámbito: '+scope;
+    if(q('userRole') && r) q('userRole').textContent=r.toUpperCase();
+  }
+  function toastBlock(title,msg){
+    if(typeof toast==='function') toast(title,msg);
+    else alert(title+'\n'+msg);
+  }
+  function requireSupabase(action){
+    if(!cfgOk()){
+      toastBlock('Supabase no configurado','Completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML. Esta versión no usa demo local.');
+      return false;
+    }
+    if(!sbActive()){
+      toastBlock('Sesión requerida','Inicia sesión con Supabase Auth para '+(action||'continuar')+'. Esta versión no usa demo local.');
+      return false;
+    }
+    return true;
+  }
+  function removeDemoButtons(){
+    document.querySelectorAll('button').forEach(function(b){
+      const oc=b.getAttribute('onclick')||'';
+      const tx=(b.textContent||'').toLowerCase();
+      if(/resetdemo|seeddemo|seedmass|seedbulk|seedadminalerts|seedsolicituddemo/i.test(oc) || tx.includes('demo')){
+        b.remove();
+      }
+    });
+  }
+  function productionNotice(){
+    const main=document.querySelector('#viewRegistro .section') || document.querySelector('.main');
+    if(!main) return;
+    let n=document.getElementById('productionRequiredNotice');
+    if(cfgOk()){
+      if(n) n.remove();
+      return;
+    }
+    if(!n){
+      n=document.createElement('div');
+      n.id='productionRequiredNotice';
+      n.className='production-required-card';
+      n.innerHTML='Versión producción: coloca la URL y anon key pública de Supabase en <b>SIBEN_SUPABASE_CONFIG</b>. No se usará base demo ni localStorage para registrar casos.';
+      main.prepend(n);
+    }
+  }
+  const oldValidate=window.validateDNI;
+  window.validateDNI=function(){
+    if(!requireSupabase('validar DNI')) return;
+    return oldValidate.apply(this,arguments);
+  };
+  const oldCreate=window.createCase;
+  window.createCase=function(){
+    if(!requireSupabase('registrar casos')) return;
+    return oldCreate.apply(this,arguments);
+  };
+  const oldDownload=window.downloadConsolidado;
+  window.downloadConsolidado=function(){
+    if(!requireSupabase('descargar consolidado')) return;
+    return oldDownload.apply(this,arguments);
+  };
+  window.resetDemo=window.seedDemoCases=window.seedMassForIntervention=window.seedBulkUpdateDemo=window.seedSolicitudDemo=function(){
+    toastBlock('Acción deshabilitada','Esta versión es de producción y no usa datos demo.');
+  };
+  window.seedAdminAlertsForDistributionV68=window.seedAdminAlertsForDistribution=function(){
+    toastBlock('Acción deshabilitada','La distribución debe trabajar con alertas reales de Supabase.');
+  };
+  window.__sibenProductionReadyV77=function(){return {configured:cfgOk(), connected:sbActive(), role:role(), scope:scopeText()};};
+  window.addEventListener('load',function(){
+    removeDemoButtons(); productionNotice(); enforceProductionScope();
+    let n=0; const t=setInterval(function(){removeDemoButtons(); productionNotice(); enforceProductionScope(); if(++n>120) clearInterval(t);},500);
+  });
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){removeDemoButtons(); enforceProductionScope();}});
+})();
+</script>
+
+</body></html>`);
   w.document.close(); w.focus();
 }
 function printProtocol(cid){
@@ -1614,7 +2233,131 @@ function printProtocol(cid){
   const rows=`<div class="print-grid"><div class="print-item"><b>DNI</b><span>${escapeHTML(c.dni)}</span></div><div class="print-item"><b>Beneficiario</b><span>${escapeHTML(c.beneficiario)}</span></div><div class="print-item"><b>Región</b><span>${escapeHTML(c.region)}</span></div><div class="print-item"><b>IES</b><span>${escapeHTML(c.ies)}</span></div><div class="print-item"><b>Protocolo activado</b><span>${escapeHTML(c.protocolo||'—')}</span></div><div class="print-item"><b>Estado</b><span>${escapeHTML(c.estado||'—')}</span></div><div class="print-item"><b>Fecha conocimiento</b><span>${escapeHTML(c.fechaConocimiento||c.fecha||'—')}</span></div><div class="print-item"><b>¿Corresponde oficio?</b><span>${escapeHTML(c.oficio||'No')}</span></div><div class="print-item"><b>N° oficio</b><span>${escapeHTML(c.numeroOficio||'—')}</span></div></div>`;
   const sesiones=(c.sesiones||[]).map(s=>`<div class="print-row"><b>Sesión ${s.n} · ${escapeHTML(s.fecha||'Sin fecha')}</b><br>Responsable: ${escapeHTML(s.responsable||c.responsableSeguimiento||'—')}<br>${escapeHTML(s.detalle||'Sin detalle')}</div>`).join('')||'<p>Sin sesiones.</p>';
   const body=`<div class="print-wrap"><div class="print-head"><div><div class="print-brand">PRONABEC · SIBEN</div><div class="print-title">Ficha de Protocolo</div><div class="print-sub">Generado: ${escapeHTML(now())}</div></div><div><b>ID caso</b><br>${escapeHTML(c.id)}</div></div><div class="print-card"><h3>Datos del beneficiario y trazabilidad</h3>${rows}</div><div class="print-card"><h3>Detalle del caso</h3><p><b>Detalle:</b> ${escapeHTML(c.detalle||'—')}</p><p><b>Orientación brindada:</b> ${escapeHTML(c.orientacion||'—')}</p><p><b>Responsable seguimiento:</b> ${escapeHTML(c.responsableSeguimiento||c.responsable||'—')}</p></div><div class="print-card"><h3>Sesiones de seguimiento</h3>${sesiones}</div><div class="print-card"><h3>Evidencias</h3><p>${escapeHTML((c.evidencias||[]).map(e=>e.nombre).join(', ') || c.archivoOficio?.nombre || 'Sin evidencias')}</p></div></div>`;
-  const w=window.open('','_blank'); w.document.write(`<html><head><title>Ficha Protocolo</title><style>${cleanPrintStyles()}</style></head><body>${body}<script>setTimeout(()=>window.print(),250)<\/script></body></html>`); w.document.close(); w.focus();
+  const w=window.open('','_blank'); w.document.write(`<html><head><title>Ficha Protocolo</title><style>${cleanPrintStyles()}</style></head><body>${body}<script>setTimeout(()=>window.print(),250)<\/script>
+
+<!-- V77 PRODUCCIÓN: bloquea fallback demo/localStorage y usa Supabase como única fuente operativa -->
+<style id="siben-v77-production-css">
+  body.production-supabase-only button[onclick*="resetDemo"],
+  body.production-supabase-only button[onclick*="seedDemo"],
+  body.production-supabase-only button[onclick*="seedMass"],
+  body.production-supabase-only button[onclick*="seedBulk"],
+  body.production-supabase-only button[onclick*="seedAdminAlerts"],
+  body.production-supabase-only button[onclick*="seedSolicitudDemo"],
+  body.production-supabase-only .demo-warning{display:none!important}
+  body.production-supabase-only #supabaseConfigWarning{
+    border:1px solid #fecaca!important;background:#fff1f2!important;color:#991b1b!important;
+    border-radius:16px!important;padding:14px 16px!important;font-weight:850!important;margin-bottom:14px!important;
+  }
+  .production-required-card{border:1px solid #bfdbfe;background:#eff6ff;color:#0f2d67;border-radius:16px;padding:14px 16px;font-weight:800;margin-bottom:14px}
+</style>
+<script id="siben-v77-production-only">
+(function(){
+  document.body.classList.add('production-supabase-only');
+  function q(id){return (typeof qs==='function'?qs(id):document.getElementById(id));}
+  function safe(v){return String(v==null?'':v);}
+  function esc(v){return safe(v).replace(/[&<>\"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m];});}
+  function cfgOk(){
+    const c=window.SIBEN_SUPABASE_CONFIG||{};
+    return !!(c.url && c.anonKey && !safe(c.url).includes('PEGAR_') && !safe(c.anonKey).includes('PEGAR_'));
+  }
+  function sbActive(){
+    return !!(window.SIBEN_SB && window.SIBEN_SB.enabled && window.SIBEN_SB.user && window.sibenSupabaseClient);
+  }
+  function role(){return (window.SIBEN_SB && window.SIBEN_SB.profile && window.SIBEN_SB.profile.rol) || '';}
+  function regionNames(){
+    const SB=window.SIBEN_SB||{};
+    const ids=(SB.regionIds||[]).map(String);
+    return (SB.regiones||[]).filter(function(r){return ids.includes(String(r.id));}).map(function(r){return r.nombre;});
+  }
+  function scopeText(){
+    const r=role();
+    if(r==='admin') return 'Nacional';
+    const regs=regionNames();
+    return regs.length?regs.join(', '):(sbActive()?'Ámbito asignado':'Pendiente');
+  }
+  function enforceProductionScope(){
+    const scope=scopeText();
+    const r=role();
+    const pill=document.querySelector('.region-pill');
+    if(pill){
+      const label=r==='admin'?'Ámbito':((window.SIBEN_SB?.regionIds||[]).length>1?'Regiones':'Región');
+      pill.innerHTML=label+'<br><b>'+esc(scope)+'</b>';
+    }
+    if(q('statusScope')) q('statusScope').textContent=scope;
+    if(q('scopePill')) q('scopePill').textContent='Ámbito: '+scope;
+    if(q('userRole') && r) q('userRole').textContent=r.toUpperCase();
+  }
+  function toastBlock(title,msg){
+    if(typeof toast==='function') toast(title,msg);
+    else alert(title+'\n'+msg);
+  }
+  function requireSupabase(action){
+    if(!cfgOk()){
+      toastBlock('Supabase no configurado','Completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML. Esta versión no usa demo local.');
+      return false;
+    }
+    if(!sbActive()){
+      toastBlock('Sesión requerida','Inicia sesión con Supabase Auth para '+(action||'continuar')+'. Esta versión no usa demo local.');
+      return false;
+    }
+    return true;
+  }
+  function removeDemoButtons(){
+    document.querySelectorAll('button').forEach(function(b){
+      const oc=b.getAttribute('onclick')||'';
+      const tx=(b.textContent||'').toLowerCase();
+      if(/resetdemo|seeddemo|seedmass|seedbulk|seedadminalerts|seedsolicituddemo/i.test(oc) || tx.includes('demo')){
+        b.remove();
+      }
+    });
+  }
+  function productionNotice(){
+    const main=document.querySelector('#viewRegistro .section') || document.querySelector('.main');
+    if(!main) return;
+    let n=document.getElementById('productionRequiredNotice');
+    if(cfgOk()){
+      if(n) n.remove();
+      return;
+    }
+    if(!n){
+      n=document.createElement('div');
+      n.id='productionRequiredNotice';
+      n.className='production-required-card';
+      n.innerHTML='Versión producción: coloca la URL y anon key pública de Supabase en <b>SIBEN_SUPABASE_CONFIG</b>. No se usará base demo ni localStorage para registrar casos.';
+      main.prepend(n);
+    }
+  }
+  const oldValidate=window.validateDNI;
+  window.validateDNI=function(){
+    if(!requireSupabase('validar DNI')) return;
+    return oldValidate.apply(this,arguments);
+  };
+  const oldCreate=window.createCase;
+  window.createCase=function(){
+    if(!requireSupabase('registrar casos')) return;
+    return oldCreate.apply(this,arguments);
+  };
+  const oldDownload=window.downloadConsolidado;
+  window.downloadConsolidado=function(){
+    if(!requireSupabase('descargar consolidado')) return;
+    return oldDownload.apply(this,arguments);
+  };
+  window.resetDemo=window.seedDemoCases=window.seedMassForIntervention=window.seedBulkUpdateDemo=window.seedSolicitudDemo=function(){
+    toastBlock('Acción deshabilitada','Esta versión es de producción y no usa datos demo.');
+  };
+  window.seedAdminAlertsForDistributionV68=window.seedAdminAlertsForDistribution=function(){
+    toastBlock('Acción deshabilitada','La distribución debe trabajar con alertas reales de Supabase.');
+  };
+  window.__sibenProductionReadyV77=function(){return {configured:cfgOk(), connected:sbActive(), role:role(), scope:scopeText()};};
+  window.addEventListener('load',function(){
+    removeDemoButtons(); productionNotice(); enforceProductionScope();
+    let n=0; const t=setInterval(function(){removeDemoButtons(); productionNotice(); enforceProductionScope(); if(++n>120) clearInterval(t);},500);
+  });
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){removeDemoButtons(); enforceProductionScope();}});
+})();
+</script>
+
+</body></html>`); w.document.close(); w.focus();
 }
 function downloadSeguimiento(){
   const rows=filteredSeguimiento(); if(!rows.length) return toast('Sin datos','No hay registros para descargar.');
@@ -2729,12 +3472,12 @@ body.role-admin #sideSolicitudesBtn:not(.hidden){display:grid!important;visibili
 
 /* =========================================================
    V74 - Adaptador Supabase para SIBEN/SUCCOR
-   - Mantiene demo local si no se completa la configuración.
-   - Al completar URL y anon key, usa Supabase Auth + RLS.
+   - Versión producción: requiere Supabase Auth + RLS.
+   - Sin fallback operativo a demo local para validación/registro.
    ========================================================= */
 window.SIBEN_SUPABASE_CONFIG = window.SIBEN_SUPABASE_CONFIG || {
-  url: 'PEGAR_SUPABASE_URL_AQUI',
-  anonKey: 'PEGAR_SUPABASE_ANON_KEY_AQUI'
+  url: 'https://vahzjuxegbzxielfmdri.supabase.co',
+  anonKey: 'sb_publishable_hmesfGFMfElmFRA_1UgCRA_B-zbH90A'
 };
 
 (function(){
@@ -2801,7 +3544,7 @@ window.SIBEN_SUPABASE_CONFIG = window.SIBEN_SUPABASE_CONFIG || {
     if(!main || document.getElementById('supabaseConfigWarning')) return;
     const div=document.createElement('div');
     div.id='supabaseConfigWarning'; div.className='supabase-config-warning';
-    div.textContent='Modo demo local: para activar Supabase, completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML.';
+    div.textContent='Supabase no configurado: completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML para trabajar en producción.';
     main.prepend(div);
   }
 
@@ -3598,6 +4341,130 @@ window.SIBEN_SUPABASE_CONFIG = window.SIBEN_SUPABASE_CONFIG || {
 })();
 
 </script>
+
+
+<!-- V77 PRODUCCIÓN: bloquea fallback demo/localStorage y usa Supabase como única fuente operativa -->
+<style id="siben-v77-production-css">
+  body.production-supabase-only button[onclick*="resetDemo"],
+  body.production-supabase-only button[onclick*="seedDemo"],
+  body.production-supabase-only button[onclick*="seedMass"],
+  body.production-supabase-only button[onclick*="seedBulk"],
+  body.production-supabase-only button[onclick*="seedAdminAlerts"],
+  body.production-supabase-only button[onclick*="seedSolicitudDemo"],
+  body.production-supabase-only .demo-warning{display:none!important}
+  body.production-supabase-only #supabaseConfigWarning{
+    border:1px solid #fecaca!important;background:#fff1f2!important;color:#991b1b!important;
+    border-radius:16px!important;padding:14px 16px!important;font-weight:850!important;margin-bottom:14px!important;
+  }
+  .production-required-card{border:1px solid #bfdbfe;background:#eff6ff;color:#0f2d67;border-radius:16px;padding:14px 16px;font-weight:800;margin-bottom:14px}
+</style>
+<script id="siben-v77-production-only">
+(function(){
+  document.body.classList.add('production-supabase-only');
+  function q(id){return (typeof qs==='function'?qs(id):document.getElementById(id));}
+  function safe(v){return String(v==null?'':v);}
+  function esc(v){return safe(v).replace(/[&<>\"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[m];});}
+  function cfgOk(){
+    const c=window.SIBEN_SUPABASE_CONFIG||{};
+    return !!(c.url && c.anonKey && !safe(c.url).includes('PEGAR_') && !safe(c.anonKey).includes('PEGAR_'));
+  }
+  function sbActive(){
+    return !!(window.SIBEN_SB && window.SIBEN_SB.enabled && window.SIBEN_SB.user && window.sibenSupabaseClient);
+  }
+  function role(){return (window.SIBEN_SB && window.SIBEN_SB.profile && window.SIBEN_SB.profile.rol) || '';}
+  function regionNames(){
+    const SB=window.SIBEN_SB||{};
+    const ids=(SB.regionIds||[]).map(String);
+    return (SB.regiones||[]).filter(function(r){return ids.includes(String(r.id));}).map(function(r){return r.nombre;});
+  }
+  function scopeText(){
+    const r=role();
+    if(r==='admin') return 'Nacional';
+    const regs=regionNames();
+    return regs.length?regs.join(', '):(sbActive()?'Ámbito asignado':'Pendiente');
+  }
+  function enforceProductionScope(){
+    const scope=scopeText();
+    const r=role();
+    const pill=document.querySelector('.region-pill');
+    if(pill){
+      const label=r==='admin'?'Ámbito':((window.SIBEN_SB?.regionIds||[]).length>1?'Regiones':'Región');
+      pill.innerHTML=label+'<br><b>'+esc(scope)+'</b>';
+    }
+    if(q('statusScope')) q('statusScope').textContent=scope;
+    if(q('scopePill')) q('scopePill').textContent='Ámbito: '+scope;
+    if(q('userRole') && r) q('userRole').textContent=r.toUpperCase();
+  }
+  function toastBlock(title,msg){
+    if(typeof toast==='function') toast(title,msg);
+    else alert(title+'\n'+msg);
+  }
+  function requireSupabase(action){
+    if(!cfgOk()){
+      toastBlock('Supabase no configurado','Completa SIBEN_SUPABASE_CONFIG.url y SIBEN_SUPABASE_CONFIG.anonKey en el HTML. Esta versión no usa demo local.');
+      return false;
+    }
+    if(!sbActive()){
+      toastBlock('Sesión requerida','Inicia sesión con Supabase Auth para '+(action||'continuar')+'. Esta versión no usa demo local.');
+      return false;
+    }
+    return true;
+  }
+  function removeDemoButtons(){
+    document.querySelectorAll('button').forEach(function(b){
+      const oc=b.getAttribute('onclick')||'';
+      const tx=(b.textContent||'').toLowerCase();
+      if(/resetdemo|seeddemo|seedmass|seedbulk|seedadminalerts|seedsolicituddemo/i.test(oc) || tx.includes('demo')){
+        b.remove();
+      }
+    });
+  }
+  function productionNotice(){
+    const main=document.querySelector('#viewRegistro .section') || document.querySelector('.main');
+    if(!main) return;
+    let n=document.getElementById('productionRequiredNotice');
+    if(cfgOk()){
+      if(n) n.remove();
+      return;
+    }
+    if(!n){
+      n=document.createElement('div');
+      n.id='productionRequiredNotice';
+      n.className='production-required-card';
+      n.innerHTML='Versión producción: coloca la URL y anon key pública de Supabase en <b>SIBEN_SUPABASE_CONFIG</b>. No se usará base demo ni localStorage para registrar casos.';
+      main.prepend(n);
+    }
+  }
+  const oldValidate=window.validateDNI;
+  window.validateDNI=function(){
+    if(!requireSupabase('validar DNI')) return;
+    return oldValidate.apply(this,arguments);
+  };
+  const oldCreate=window.createCase;
+  window.createCase=function(){
+    if(!requireSupabase('registrar casos')) return;
+    return oldCreate.apply(this,arguments);
+  };
+  const oldDownload=window.downloadConsolidado;
+  window.downloadConsolidado=function(){
+    if(!requireSupabase('descargar consolidado')) return;
+    return oldDownload.apply(this,arguments);
+  };
+  window.resetDemo=window.seedDemoCases=window.seedMassForIntervention=window.seedBulkUpdateDemo=window.seedSolicitudDemo=function(){
+    toastBlock('Acción deshabilitada','Esta versión es de producción y no usa datos demo.');
+  };
+  window.seedAdminAlertsForDistributionV68=window.seedAdminAlertsForDistribution=function(){
+    toastBlock('Acción deshabilitada','La distribución debe trabajar con alertas reales de Supabase.');
+  };
+  window.__sibenProductionReadyV77=function(){return {configured:cfgOk(), connected:sbActive(), role:role(), scope:scopeText()};};
+  window.addEventListener('load',function(){
+    removeDemoButtons(); productionNotice(); enforceProductionScope();
+    let n=0; const t=setInterval(function(){removeDemoButtons(); productionNotice(); enforceProductionScope(); if(++n>120) clearInterval(t);},500);
+  });
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){removeDemoButtons(); enforceProductionScope();}});
+})();
+</script>
+
 </body>
 </html>
 <!-- V58: demo local robusta, 3 secciones, alerta académica cargada solo por administrador. -->
