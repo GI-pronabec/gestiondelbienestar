@@ -1,0 +1,36 @@
+/* SIGEB · Adaptador institucional Supabase */
+body:not(.siben-authenticated) #app{visibility:hidden!important;height:100vh!important;overflow:hidden!important}
+body.siben-authenticated #v83Login{display:none!important}
+.siben-actions button[onclick*="setRole"],
+.siben-actions button[onclick*="resetDemo"],
+[onclick*="seedDemo"],[onclick*="seedAdmin"],[onclick*="seedSolicitud"],
+.v83-account-grid,.v83-password-note{display:none!important}
+#sigebRemoteBusy{position:fixed;inset:0;z-index:300000;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(245,248,252,.82);backdrop-filter:blur(6px);color:#0f2f64}
+#sigebRemoteBusy.active{display:flex}
+.sigeb-remote-spinner{width:42px;height:42px;border-radius:50%;border:4px solid #d8e7f6;border-top-color:#245cff;animation:sigeb-spin .75s linear infinite}
+@keyframes sigeb-spin{to{transform:rotate(360deg)}}
+#sigebRemoteBusy strong{font-size:14px;letter-spacing:.01em}
+.sigeb-config-box{margin-top:18px;border:1px solid #dbe5f0;border-radius:14px;background:#f8fbff;overflow:hidden}
+.sigeb-config-box summary{padding:12px 14px;font-size:12px;font-weight:900;color:#075a9e;cursor:pointer;user-select:none}
+.sigeb-config-grid{display:grid;gap:10px;padding:0 14px 14px}
+.sigeb-config-grid label{font-size:11.5px}.sigeb-config-grid input{height:42px}
+.sigeb-config-grid small{color:#64748b;line-height:1.4}
+.sigeb-remote-note{padding:12px 14px;border:1px solid #cfe0f5;border-radius:13px;background:#f4f9ff;color:#334155;font-size:12.5px;line-height:1.48;margin-bottom:12px}
+.sigeb-remote-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.sigeb-remote-edit-grid .full{grid-column:1/-1}
+.sigeb-search-results{display:grid;gap:8px}
+.sigeb-search-results button{display:grid;gap:4px;width:100%;text-align:left;padding:13px 14px;border-radius:14px;border:1px solid #dbe5f0;background:#fff;color:#0f172a;cursor:pointer}
+.sigeb-search-results button:hover{border-color:#93b7e4;background:#f7fbff}
+.sigeb-search-results b{font-size:13px}.sigeb-search-results span{font-size:12px;color:#64748b}
+.v92-request-badge{display:inline-flex;padding:6px 9px;border-radius:999px;border:1px solid #d7e3f0;background:#f5f8fc;color:#334155;font-size:11.5px;font-weight:850}
+.v92-distribution-summary{border:1px solid #d8e4ef;border-radius:15px;background:#fff;overflow:hidden;margin:10px 0 14px}
+.v92-distribution-summary table{width:100%!important;min-width:0!important;border-collapse:collapse}
+.v92-distribution-summary th,.v92-distribution-summary td{padding:10px 12px!important;white-space:normal!important;min-width:0!important}
+.v92-distribution-summary th:nth-child(2),.v92-distribution-summary th:nth-child(3),.v92-distribution-summary td:nth-child(2),.v92-distribution-summary td:nth-child(3){text-align:center}
+.sigeb-total-row td{font-weight:950;background:#eef5ff!important;color:#073b78}
+.sigeb-notify-item{width:100%;display:grid;gap:4px;text-align:left;border:1px solid #dce6f1;border-radius:12px;background:#fff;padding:11px 12px;margin-bottom:7px;cursor:pointer;color:#0f172a}
+.sigeb-notify-item.unread{background:#f2f7ff;border-color:#b9d2f2}
+.sigeb-notify-item b{font-size:12.5px}.sigeb-notify-item span{font-size:12px;color:#475569;line-height:1.35}.sigeb-notify-item small{font-size:10.5px;color:#64748b}
+.sigeb-notify-empty{text-align:center;padding:18px;color:#64748b;font-size:12px}
+#v83LogoutBtn{height:34px!important;padding:0 11px!important;font-size:11.5px!important;white-space:nowrap!important}
+@media(max-width:850px){.sigeb-remote-edit-grid{grid-template-columns:1fr}.sigeb-config-box{margin-top:12px}}
