@@ -695,6 +695,7 @@ body.role-succor .siben-actions button[onclick="resetDemo()"],body.role-monitora
 @media(max-width:850px){#v83Login{padding:12px}.v83-login-shell{grid-template-columns:1fr;min-height:0;max-height:96vh;overflow:auto}.v83-login-brand{padding:28px}.v83-brand-copy h1{font-size:34px}.v83-brand-copy{margin:35px 0}.v83-login-panel{padding:30px}.v83-account-grid{grid-template-columns:1fr}.v83-brand-foot{display:none}}
 </style>
 
+<meta name="sigeb-build" content="2026-07-17-v5-direct">
 </head>
 <body>
 
@@ -1716,7 +1717,7 @@ function renderHistoryTab(tab='general'){
 function cleanPrintStyles(){return `@page{size:A4;margin:12mm}body{font-family:Arial,Helvetica,sans-serif;color:#0f172a;background:#fff;font-size:12px;line-height:1.45}.print-wrap{max-width:780px;margin:0 auto}.print-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:4px solid #073b78;padding-bottom:12px;margin-bottom:14px}.print-brand{font-weight:900;color:#073b78;font-size:21px;letter-spacing:.04em;position:relative;padding-bottom:8px}.print-brand:after{content:'';display:block;width:150px;height:4px;border-radius:99px;background:linear-gradient(90deg,#073b78 0 20%,#e7378a 20% 36%,#f5a623 36% 51%,#16a34a 51% 66%,#0584c7 66% 82%,#dc2626 82% 92%,#52525b 92% 100%);margin-top:6px}.print-title{font-size:24px;font-weight:900;color:#082b56;margin:8px 0 2px}.print-sub{color:#64748b}.print-card{border:1px solid #dbe3ee;border-radius:12px;padding:12px;margin:10px 0;background:#fbfdff}.print-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.print-item{border:1px solid #e0e9f3;border-radius:9px;padding:8px;background:#f6f9fc}.print-item b{display:block;color:#64748b;text-transform:uppercase;font-size:9px;letter-spacing:.05em}.print-item span{font-weight:800}.print-row{border:1px solid #e0e9f3;border-radius:10px;padding:10px;margin:7px 0;background:#fff}.print-row b{color:#082b56}.badge,.status{display:inline-block;border-radius:999px;padding:3px 8px;background:#eff6ff;color:#1d4ed8;font-weight:800}.btn,.side-footer,.history-tabs,.pdf-small,.evidence-chip{display:none!important}`}
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'"></script>
 <style id="sigeb-supabase-adapter-css">
 /* SIGEB · Adaptador institucional Supabase */
 body:not(.siben-authenticated) #app{visibility:hidden!important;height:100vh!important;overflow:hidden!important}
@@ -1769,7 +1770,262 @@ body.siben-authenticated #v83Login{display:none!important}
 @media(max-width:620px){#benefMount .benef-grid{grid-template-columns:1fr}}
 
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ========================================================================== 
+   SIGEB SUPABASE DIRECT CLIENT 1.0
+   Cliente integrado para GitHub Pages. No depende de jsDelivr ni de unpkg
+   para autenticación, RPC, Storage o actualizaciones de tablas.
+   ========================================================================== */
+(function(global){
+  'use strict';
+  if(global.supabase && typeof global.supabase.createClient==='function') return;
+
+  function makeError(message,status,details){
+    const e=new Error(String(message||'Error de Supabase'));
+    e.status=status||0;e.details=details||null;return e;
+  }
+  function projectRef(url){
+    try{return new URL(url).hostname.split('.')[0]}catch(_){return 'sigeb'}
+  }
+  function safeJson(text){
+    if(!text)return null;
+    try{return JSON.parse(text)}catch(_){return text}
+  }
+  function errorMessage(payload,status){
+    if(!payload)return 'Error HTTP '+status;
+    if(typeof payload==='string')return payload;
+    return payload.message||payload.msg||payload.error_description||payload.error||payload.hint||('Error HTTP '+status);
+  }
+  async function fetchTimeout(url,options,timeoutMs){
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),timeoutMs||25000);
+    try{return await fetch(url,Object.assign({cache:'no-store'},options||{},{signal:ctrl.signal}))}
+    catch(err){
+      if(err&&err.name==='AbortError')throw makeError('Tiempo de espera agotado al conectar con Supabase.',0);
+      throw err;
+    }finally{clearTimeout(timer)}
+  }
+
+  function createClient(supabaseUrl,supabaseKey,options){
+    const base=String(supabaseUrl||'').replace(/\/+$/,'');
+    const key=String(supabaseKey||'').trim();
+    const ref=projectRef(base);
+    const storageKey='sb-'+ref+'-auth-token';
+    const listeners=new Set();
+    const channels=new Set();
+    let session=null;
+    let refreshPromise=null;
+    let refreshTimer=null;
+
+    function loadSession(){
+      if(session)return session;
+      try{
+        const raw=localStorage.getItem(storageKey);
+        if(!raw)return null;
+        const parsed=JSON.parse(raw);
+        if(parsed&&parsed.access_token)session=parsed;
+        else if(Array.isArray(parsed)&&parsed[0]){
+          session={access_token:parsed[0],refresh_token:parsed[1]||'',expires_at:parsed[3]||0,user:parsed[5]||null,token_type:'bearer'};
+        }
+      }catch(_){session=null}
+      return session;
+    }
+    function saveSession(next){
+      session=next||null;
+      try{
+        if(session)localStorage.setItem(storageKey,JSON.stringify(session));
+        else localStorage.removeItem(storageKey);
+      }catch(_){/* almacenamiento no disponible */}
+      scheduleRefresh();
+    }
+    function emit(event,nextSession){
+      listeners.forEach(fn=>{try{fn(event,nextSession||null)}catch(err){console.error(err)}});
+    }
+    function normalizedSession(payload){
+      if(!payload||!payload.access_token)return null;
+      const now=Math.floor(Date.now()/1000);
+      return {
+        access_token:payload.access_token,
+        refresh_token:payload.refresh_token||'',
+        token_type:payload.token_type||'bearer',
+        expires_in:Number(payload.expires_in||3600),
+        expires_at:Number(payload.expires_at||now+Number(payload.expires_in||3600)),
+        user:payload.user||null
+      };
+    }
+    function publicHeaders(extra){
+      return Object.assign({'apikey':key,'Accept':'application/json'},extra||{});
+    }
+    function authHeaders(extra){
+      const s=loadSession();
+      return Object.assign({'apikey':key,'Accept':'application/json'},s&&s.access_token?{'Authorization':'Bearer '+s.access_token}:{},extra||{});
+    }
+    async function parseResponse(res){
+      const text=await res.text();
+      const payload=safeJson(text);
+      if(!res.ok)throw makeError(errorMessage(payload,res.status),res.status,payload);
+      return payload;
+    }
+    async function tokenRequest(grantType,body){
+      const res=await fetchTimeout(base+'/auth/v1/token?grant_type='+encodeURIComponent(grantType),{
+        method:'POST',headers:publicHeaders({'Content-Type':'application/json'}),body:JSON.stringify(body||{})
+      });
+      return parseResponse(res);
+    }
+    async function refreshSessionInternal(){
+      const current=loadSession();
+      if(!current||!current.refresh_token)return null;
+      if(refreshPromise)return refreshPromise;
+      refreshPromise=(async()=>{
+        try{
+          const payload=await tokenRequest('refresh_token',{refresh_token:current.refresh_token});
+          const next=normalizedSession(payload);saveSession(next);emit('TOKEN_REFRESHED',next);return next;
+        }catch(err){
+          saveSession(null);emit('SIGNED_OUT',null);throw err;
+        }finally{refreshPromise=null}
+      })();
+      return refreshPromise;
+    }
+    function scheduleRefresh(){
+      if(refreshTimer){clearTimeout(refreshTimer);refreshTimer=null}
+      const s=loadSession();if(!s||!s.expires_at)return;
+      const ms=Math.max(15000,(Number(s.expires_at)*1000-Date.now())-90000);
+      refreshTimer=setTimeout(()=>refreshSessionInternal().catch(()=>{}),ms);
+    }
+    async function validSession(){
+      const s=loadSession();if(!s)return null;
+      if(Number(s.expires_at||0)*1000-Date.now()<90000 && s.refresh_token){
+        try{return await refreshSessionInternal()}catch(_){return null}
+      }
+      return s;
+    }
+    async function authorizedFetch(url,opts,retry){
+      await validSession();
+      const options2=Object.assign({},opts||{});
+      options2.headers=authHeaders(options2.headers||{});
+      let res=await fetchTimeout(url,options2);
+      if(res.status===401 && retry!==false && loadSession()&&loadSession().refresh_token){
+        await refreshSessionInternal();
+        options2.headers=authHeaders(opts&&opts.headers||{});
+        res=await fetchTimeout(url,options2);
+      }
+      return res;
+    }
+
+    loadSession();scheduleRefresh();
+    global.addEventListener('storage',function(ev){
+      if(ev.key!==storageKey)return;
+      const old=!!session;session=null;const next=loadSession();
+      emit(next?(old?'TOKEN_REFRESHED':'SIGNED_IN'):'SIGNED_OUT',next);
+    });
+
+    const auth={
+      async signInWithPassword(credentials){
+        try{
+          const email=String(credentials&&credentials.email||'').trim();
+          const password=String(credentials&&credentials.password||'');
+          const payload=await tokenRequest('password',{email,password});
+          const next=normalizedSession(payload);saveSession(next);emit('SIGNED_IN',next);
+          return {data:{user:next&&next.user||null,session:next},error:null};
+        }catch(error){return {data:{user:null,session:null},error}}
+      },
+      async getSession(){
+        try{return {data:{session:await validSession()},error:null}}
+        catch(error){return {data:{session:null},error}}
+      },
+      async refreshSession(){
+        try{const next=await refreshSessionInternal();return {data:{user:next&&next.user||null,session:next},error:null}}
+        catch(error){return {data:{user:null,session:null},error}}
+      },
+      async signOut(){
+        const current=loadSession();
+        try{
+          if(current&&current.access_token){
+            await fetchTimeout(base+'/auth/v1/logout',{method:'POST',headers:authHeaders()});
+          }
+        }catch(_){/* el cierre local siempre continúa */}
+        saveSession(null);emit('SIGNED_OUT',null);
+        return {error:null};
+      },
+      onAuthStateChange(callback){
+        listeners.add(callback);
+        const subscription={unsubscribe:function(){listeners.delete(callback)}};
+        return {data:{subscription}};
+      }
+    };
+
+    async function rpc(name,args){
+      try{
+        const res=await authorizedFetch(base+'/rest/v1/rpc/'+encodeURIComponent(name),{
+          method:'POST',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(args||{})
+        });
+        return {data:await parseResponse(res),error:null};
+      }catch(error){return {data:null,error}}
+    }
+
+    function from(table){
+      const tableName=encodeURIComponent(String(table||''));
+      return {
+        update(values){
+          return {
+            async eq(column,value){
+              try{
+                const url=base+'/rest/v1/'+tableName+'?'+encodeURIComponent(column)+'=eq.'+encodeURIComponent(String(value));
+                const res=await authorizedFetch(url,{
+                  method:'PATCH',headers:{'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(values||{})
+                });
+                return {data:await parseResponse(res),error:null};
+              }catch(error){return {data:null,error}}
+            }
+          };
+        }
+      };
+    }
+
+    const storage={
+      from(bucket){
+        const bucketName=encodeURIComponent(String(bucket||''));
+        return {
+          async upload(path,file,uploadOptions){
+            try{
+              const safePath=String(path||'').split('/').map(encodeURIComponent).join('/');
+              const headers={'Content-Type':(uploadOptions&&uploadOptions.contentType)||file.type||'application/octet-stream','x-upsert':uploadOptions&&uploadOptions.upsert?'true':'false'};
+              const res=await authorizedFetch(base+'/storage/v1/object/'+bucketName+'/'+safePath,{method:'POST',headers,body:file});
+              const payload=await parseResponse(res);
+              return {data:payload||{path:String(path||'')},error:null};
+            }catch(error){return {data:null,error}}
+          }
+        };
+      }
+    };
+
+    function channel(name){
+      const callbacks=[];
+      let timer=null;
+      const ch={
+        on(_event,_filter,callback){if(typeof callback==='function')callbacks.push(callback);return ch},
+        subscribe(statusCallback){
+          channels.add(ch);
+          if(typeof statusCallback==='function')setTimeout(()=>statusCallback('SUBSCRIBED'),0);
+          timer=setInterval(function(){
+            if(document.visibilityState!=='visible'||!loadSession())return;
+            callbacks.forEach(cb=>{try{cb({eventType:'POLL',schema:'public'})}catch(err){console.error(err)}});
+          },30000);
+          return ch;
+        },
+        unsubscribe(){if(timer)clearInterval(timer);timer=null;channels.delete(ch);return Promise.resolve('ok')},
+        _stop(){if(timer)clearInterval(timer);timer=null;channels.delete(ch)}
+      };
+      return ch;
+    }
+    function removeChannel(ch){if(ch&&typeof ch._stop==='function')ch._stop();return Promise.resolve('ok')}
+
+    return {auth,rpc,from,storage,channel,removeChannel};
+  }
+
+  global.supabase={createClient:createClient,__sigebDirectClient:true,version:'direct-1.0'};
+})(window);
+</script>
 <script src="./config_sigeb.js"></script>
 
 <!-- V65 Funcionalidad por actor: Alertas Admin, Distribución, IES y sesiones compactas -->
@@ -3697,7 +3953,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 (function(){
 'use strict';
 
-const ADAPTER_VERSION='SIGEB-SUPABASE-1.1';
+const ADAPTER_VERSION='SIGEB-SUPABASE-1.2-DIRECT';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
@@ -3740,7 +3996,7 @@ function ensureClient(){
   if(sb)return sb;
   const cfg=resolveConfig();
   if(!isConfigured(cfg))throw new Error('Falta configurar la URL del proyecto y la clave pública de Supabase.');
-  if(!window.supabase?.createClient)throw new Error('No se pudo cargar la biblioteca de conexión con Supabase.');
+  if(!window.supabase?.createClient)throw new Error('El cliente integrado de Supabase no se inicializó correctamente. Recargue la página con Ctrl + F5.');
   sb=window.supabase.createClient(cfg.url,cfg.key,{
     auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true},
     global:{headers:{'x-client-info':'sigeb-web/'+ADAPTER_VERSION}}
