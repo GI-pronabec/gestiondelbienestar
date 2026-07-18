@@ -770,7 +770,7 @@ body.role-succor .siben-actions button[onclick="resetDemo()"],body.role-monitora
         </button>
 
         <button class="side-primary" onclick="showView('registro')">Registro de caso</button>
-        <div class="side-footer">SIGEB v1.2<br>© PRONABEC 2026</div>
+        <div class="side-footer">SIGEB v1.2.1<br>© PRONABEC 2026</div>
       </aside>
       <main class="main">
         <section class="hero"><div><h2 id="mainTitle">Dashboard</h2><p id="mainSubtitle">Resumen operativo de cartera visible.</p></div><div class="scope-card"><b>Alcance visible</b><span id="statusScope">Lima</span></div></section>
@@ -3700,7 +3700,7 @@ function syncBranding(){
   document.title='SIGEB · PRONABEC';
   document.querySelectorAll('.siben-title strong,.side-logo-box h2').forEach(e=>e.textContent='SIGEB');
   document.querySelectorAll('.siben-title span').forEach(e=>e.textContent='Sistema Integral de Gestión del Bienestar');
-  document.querySelectorAll('.side-footer').forEach(e=>e.innerHTML='SIGEB v1.2<br>© PRONABEC 2026');
+  document.querySelectorAll('.side-footer').forEach(e=>e.innerHTML='SIGEB v1.2.1<br>© PRONABEC 2026');
   const follow=document.querySelector('.follow-tab[data-follow="Alerta Académica"]');if(follow)follow.textContent='Alertas Académicas';
 }
 function ensureLinkedModules(){
@@ -4154,6 +4154,10 @@ async function lookupBeneficiaryByDni(dni){
   if(lookupError)throw lookupError;
   return null;
 }
+// Expone la consulta remota para los parches de interfaz que se ejecutan
+// fuera de este módulo. La función conserva el control territorial y RLS
+// porque internamente utiliza la RPC institucional sigeb_buscar_becario.
+window.sigebLookupBeneficiaryByDni=lookupBeneficiaryByDni;
 function beneficiaryCardRemote(b){
   const condition=b.condicion||b.estadoCondicionActual||b.estadoBecario||'Sin información';
   const age=(b.edad!==''&&b.edad!==null&&b.edad!==undefined)?`${esc(b.edad)} años`:'—';
@@ -4672,7 +4676,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script id="sigeb-v6-critical-fixes-js">
 (function(){
   'use strict';
-  const V6_VERSION='6.0.0';
+  const V6_VERSION='6.1.0';
 
   function byId(id){return document.getElementById(id)}
   function cleanV6(v){return String(v||'').replace(/\D/g,'').slice(0,8)}
@@ -4718,8 +4722,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.dataset.originalText=button.textContent;button.textContent='Consultando...'}
     if(mount)mount.innerHTML='<div class="sigeb-dni-loading">Consultando padrón institucional...</div>';
     try{
-      if(typeof lookupBeneficiaryByDni!=='function')throw new Error('La función de consulta del padrón no está disponible en esta versión.');
-      const b=await lookupBeneficiaryByDni(dni);
+      const lookup=window.sigebLookupBeneficiaryByDni;
+      if(typeof lookup!=='function')throw new Error('La función de consulta del padrón no pudo inicializarse. Recargue la página con Ctrl + F5.');
+      const b=await lookup(dni);
       if(!b){
         if(mount)mount.innerHTML='<div class="notice" style="border-color:#fecaca;background:#fff1f2;color:#991b1b">DNI no encontrado en el padrón visible para este usuario.</div>';
         return;
