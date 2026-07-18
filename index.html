@@ -770,7 +770,7 @@ body.role-succor .siben-actions button[onclick="resetDemo()"],body.role-monitora
         </button>
 
         <button class="side-primary" onclick="showView('registro')">Registro de caso</button>
-        <div class="side-footer">SIGEB v1.1<br>© PRONABEC 2026</div>
+        <div class="side-footer">SIGEB v1.2<br>© PRONABEC 2026</div>
       </aside>
       <main class="main">
         <section class="hero"><div><h2 id="mainTitle">Dashboard</h2><p id="mainSubtitle">Resumen operativo de cartera visible.</p></div><div class="scope-card"><b>Alcance visible</b><span id="statusScope">Lima</span></div></section>
@@ -3700,7 +3700,7 @@ function syncBranding(){
   document.title='SIGEB · PRONABEC';
   document.querySelectorAll('.siben-title strong,.side-logo-box h2').forEach(e=>e.textContent='SIGEB');
   document.querySelectorAll('.siben-title span').forEach(e=>e.textContent='Sistema Integral de Gestión del Bienestar');
-  document.querySelectorAll('.side-footer').forEach(e=>e.innerHTML='SIGEB v1.1<br>© PRONABEC 2026');
+  document.querySelectorAll('.side-footer').forEach(e=>e.innerHTML='SIGEB v1.2<br>© PRONABEC 2026');
   const follow=document.querySelector('.follow-tab[data-follow="Alerta Académica"]');if(follow)follow.textContent='Alertas Académicas';
 }
 function ensureLinkedModules(){
@@ -4145,10 +4145,14 @@ function beneficiaryFromExistingCase(dni){
 }
 async function lookupBeneficiaryByDni(dni){
   const normalized=cleanDni(dni);
-  let data=null;
-  try{data=await rpc('sigeb_buscar_becario',{p_dni:normalized})}catch(error){console.warn('SIGEB lookup RPC:',error)}
+  let data=null,lookupError=null;
+  try{data=await rpc('sigeb_buscar_becario',{p_dni:normalized})}catch(error){lookupError=error;console.warn('SIGEB lookup RPC:',error)}
+  if(Array.isArray(data))data=data[0]||null;
   if(data)return cacheBeneficiary(data);
-  return beneficiaryCache.get(normalized)||beneficiaryFromExistingCase(normalized);
+  const fallback=beneficiaryCache.get(normalized)||beneficiaryFromExistingCase(normalized);
+  if(fallback)return fallback;
+  if(lookupError)throw lookupError;
+  return null;
 }
 function beneficiaryCardRemote(b){
   const condition=b.condicion||b.estadoCondicionActual||b.estadoBecario||'Sin información';
@@ -4620,6 +4624,183 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 
 </script>
+
+<style id="sigeb-v6-critical-fixes-css">
+/* V6: la acción IES forma parte real de la barra de pestañas. Evita capas
+   superpuestas y garantiza que toda la superficie del botón sea interactiva. */
+#viewSeguimiento .follow-tabs{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  position:relative!important;
+  isolation:isolate!important;
+}
+#viewSeguimiento #v92FollowIES{
+  display:flex!important;
+  align-items:center!important;
+  margin:0 0 0 auto!important;
+  position:relative!important;
+  z-index:50!important;
+  pointer-events:auto!important;
+  min-height:44px!important;
+}
+#viewSeguimiento #v92FollowIES.hidden{display:none!important}
+#viewSeguimiento #v92FollowIES .v92-ies-btn{
+  position:relative!important;
+  z-index:51!important;
+  pointer-events:auto!important;
+  min-height:42px!important;
+  line-height:1.15!important;
+  cursor:pointer!important;
+  touch-action:manipulation!important;
+}
+#viewSeguimiento .v84-filterbar,
+#viewSeguimiento .grid-3{
+  position:relative!important;
+  z-index:1!important;
+}
+.sigeb-dni-loading{
+  margin-top:12px;padding:12px 14px;border:1px solid #bfdbfe;border-radius:14px;
+  background:#eff6ff;color:#1e3a8a;font-weight:800;
+}
+@media(max-width:900px){
+  #viewSeguimiento #v92FollowIES{width:100%!important;margin-left:0!important}
+  #viewSeguimiento #v92FollowIES .v92-ies-btn{width:100%!important}
+}
+</style>
+<script id="sigeb-v6-critical-fixes-js">
+(function(){
+  'use strict';
+  const V6_VERSION='6.0.0';
+
+  function byId(id){return document.getElementById(id)}
+  function cleanV6(v){return String(v||'').replace(/\D/g,'').slice(0,8)}
+  function errorTextV6(error){
+    const raw=String(error?.message||error||'').trim();
+    if(/permission denied|42501/i.test(raw))return 'La cuenta no tiene permiso para consultar el padrón. Revise permisos y políticas de Supabase.';
+    if(/function .* does not exist|404|PGRST202/i.test(raw))return 'La función de búsqueda no está disponible en Supabase. Ejecute la migración o el parche de búsqueda.';
+    if(/failed to fetch|network|load failed/i.test(raw))return 'No se pudo consultar Supabase. Revise conexión, URL y disponibilidad del proyecto.';
+    return raw||'No se pudo consultar el padrón.';
+  }
+
+  /* Conserva compatibilidad con módulos heredados que todavía llaman a
+     findBenef de forma síncrona. Primero consulta la caché remota y luego
+     reconstruye la ficha desde un caso visible. */
+  const legacyFindBenef=window.findBenef;
+  window.findBenef=function(dni){
+    const normalized=typeof cleanDni==='function'?cleanDni(dni):cleanV6(dni).padStart(8,'0');
+    try{
+      const cached=typeof beneficiaryCache!=='undefined'?beneficiaryCache.get(normalized):null;
+      if(cached)return cached;
+      const fromCase=typeof beneficiaryFromExistingCase==='function'?beneficiaryFromExistingCase(normalized):null;
+      if(fromCase)return fromCase;
+    }catch(error){console.warn('SIGEB V6 findBenef fallback:',error)}
+    return typeof legacyFindBenef==='function'?legacyFindBenef(normalized):null;
+  };
+
+  /* Corrige el flujo principal de Registro. La versión anterior llamaba al
+     padrón demo local de forma síncrona y nunca esperaba la RPC de Supabase. */
+  window.validateRegistrationDniV78=async function(){
+    const input=byId('regDniInput');
+    const mount=byId('regBenefMount');
+    const cont=byId('regContinueWrap');
+    const row=input?.closest('.v78-dni-row');
+    const button=row?.querySelector('button');
+    const dni=cleanV6(input?.value);
+    if(input)input.value=dni;
+    if(typeof state!=='undefined')state.validated=null;
+    cont?.classList.add('hidden');
+    if(!/^\d{8}$/.test(dni)){
+      if(mount)mount.innerHTML='<div class="notice" style="border-color:#fecaca;background:#fff1f2;color:#991b1b">El DNI debe contener exactamente 8 números.</div>';
+      return;
+    }
+    if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.dataset.originalText=button.textContent;button.textContent='Consultando...'}
+    if(mount)mount.innerHTML='<div class="sigeb-dni-loading">Consultando padrón institucional...</div>';
+    try{
+      if(typeof lookupBeneficiaryByDni!=='function')throw new Error('La función de consulta del padrón no está disponible en esta versión.');
+      const b=await lookupBeneficiaryByDni(dni);
+      if(!b){
+        if(mount)mount.innerHTML='<div class="notice" style="border-color:#fecaca;background:#fff1f2;color:#991b1b">DNI no encontrado en el padrón visible para este usuario.</div>';
+        return;
+      }
+      if(typeof state!=='undefined')state.validated=b;
+      if(mount)mount.innerHTML=typeof beneficiaryCardRemote==='function'?beneficiaryCardRemote(b):(typeof benefHTML==='function'?benefHTML(b):'');
+      cont?.classList.remove('hidden');
+    }catch(error){
+      console.error('SIGEB V6 DNI:',error);
+      if(mount)mount.innerHTML='<div class="notice" style="border-color:#fecaca;background:#fff1f2;color:#991b1b">'+(typeof esc==='function'?esc(errorTextV6(error)):errorTextV6(error))+'</div>';
+    }finally{
+      if(button){button.disabled=false;button.removeAttribute('aria-busy');button.textContent=button.dataset.originalText||'Validar DNI'}
+    }
+  };
+
+  /* Corrige también el formulario heredado que puede ser invocado desde
+     rutas antiguas de registro individual. */
+  window.validateDNI=async function(){
+    const input=byId('dniInput'),mount=byId('benefMount'),form=byId('caseFormMount');
+    const dni=cleanV6(input?.value);if(input)input.value=dni;
+    if(!/^\d{8}$/.test(dni)){
+      if(mount)mount.innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">El DNI debe contener exactamente 8 números.</div>';
+      form?.classList.add('hidden');return;
+    }
+    try{
+      const b=await lookupBeneficiaryByDni(dni);
+      if(!b){if(mount)mount.innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">DNI no encontrado en el padrón visible para este usuario.</div>';form?.classList.add('hidden');return}
+      if(typeof state!=='undefined')state.validated=b;
+      if(mount)mount.innerHTML=beneficiaryCardRemote(b);
+      form?.classList.remove('hidden');
+      if(form&&typeof caseFormHTML==='function')form.innerHTML=caseFormHTML(state.intervention,b);
+    }catch(error){
+      if(mount)mount.innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">'+(typeof esc==='function'?esc(errorTextV6(error)):errorTextV6(error))+'</div>';
+      form?.classList.add('hidden');
+    }
+  };
+
+  function placeIESButtonV6(){
+    const tabs=byId('viewSeguimiento')?.querySelector('.follow-tabs');
+    const wrap=byId('v92FollowIES');
+    if(!tabs||!wrap)return;
+    if(wrap.parentElement!==tabs)tabs.appendChild(wrap);
+    const btn=wrap.querySelector('button');
+    if(btn){btn.type='button';btn.style.pointerEvents='auto';btn.style.position='relative';btn.style.zIndex='51'}
+  }
+
+  const priorRenderSeguimiento=window.renderSeguimiento;
+  window.renderSeguimiento=function(){
+    const result=typeof priorRenderSeguimiento==='function'?priorRenderSeguimiento.apply(this,arguments):undefined;
+    setTimeout(placeIESButtonV6,0);return result;
+  };
+  const priorRenderAll=window.renderAll;
+  window.renderAll=function(){
+    const result=typeof priorRenderAll==='function'?priorRenderAll.apply(this,arguments):undefined;
+    setTimeout(placeIESButtonV6,100);return result;
+  };
+  const priorShowViewV6=window.showView;
+  window.showView=function(){
+    const result=typeof priorShowViewV6==='function'?priorShowViewV6.apply(this,arguments):undefined;
+    setTimeout(placeIESButtonV6,50);return result;
+  };
+
+  const follow=byId('viewSeguimiento');
+  if(follow)new MutationObserver(()=>placeIESButtonV6()).observe(follow,{childList:true,subtree:true});
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(placeIESButtonV6,250),{once:true});
+  else setTimeout(placeIESButtonV6,250);
+
+  window.SIGEB_DIAGNOSTICS=Object.freeze({
+    version:V6_VERSION,
+    get profile(){return typeof profile!=='undefined'?profile:null},
+    get caseCount(){return typeof state!=='undefined'&&Array.isArray(state.cases)?state.cases.length:0},
+    async lookupDni(dni){return lookupBeneficiaryByDni(dni)},
+    buttonHitTest(){
+      const btn=byId('v92FollowIES')?.querySelector('button');if(!btn)return {ok:false,reason:'button-not-found'};
+      const r=btn.getBoundingClientRect(),points=[[r.left+r.width/2,r.top+r.height/2],[r.left+r.width/2,r.bottom-3]];
+      return {ok:points.every(([x,y])=>btn===document.elementFromPoint(x,y)||btn.contains(document.elementFromPoint(x,y))),rect:{x:r.x,y:r.y,width:r.width,height:r.height},hits:points.map(([x,y])=>document.elementFromPoint(x,y)?.tagName||null)};
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
 <!-- V58: demo local robusta, 3 secciones, alerta académica cargada solo por administrador. -->
