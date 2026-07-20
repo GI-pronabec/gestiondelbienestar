@@ -1717,7 +1717,7 @@ function renderHistoryTab(tab='general'){
 function cleanPrintStyles(){return `@page{size:A4;margin:12mm}body{font-family:Arial,Helvetica,sans-serif;color:#0f172a;background:#fff;font-size:12px;line-height:1.45}.print-wrap{max-width:780px;margin:0 auto}.print-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:4px solid #073b78;padding-bottom:12px;margin-bottom:14px}.print-brand{font-weight:900;color:#073b78;font-size:21px;letter-spacing:.04em;position:relative;padding-bottom:8px}.print-brand:after{content:'';display:block;width:150px;height:4px;border-radius:99px;background:linear-gradient(90deg,#073b78 0 20%,#e7378a 20% 36%,#f5a623 36% 51%,#16a34a 51% 66%,#0584c7 66% 82%,#dc2626 82% 92%,#52525b 92% 100%);margin-top:6px}.print-title{font-size:24px;font-weight:900;color:#082b56;margin:8px 0 2px}.print-sub{color:#64748b}.print-card{border:1px solid #dbe3ee;border-radius:12px;padding:12px;margin:10px 0;background:#fbfdff}.print-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.print-item{border:1px solid #e0e9f3;border-radius:9px;padding:8px;background:#f6f9fc}.print-item b{display:block;color:#64748b;text-transform:uppercase;font-size:9px;letter-spacing:.05em}.print-item span{font-weight:800}.print-row{border:1px solid #e0e9f3;border-radius:10px;padding:10px;margin:7px 0;background:#fff}.print-row b{color:#082b56}.badge,.status{display:inline-block;border-radius:999px;padding:3px 8px;background:#eff6ff;color:#1d4ed8;font-weight:800}.btn,.side-footer,.history-tabs,.pdf-small,.evidence-chip{display:none!important}`}
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'"></script>
+<script src="vendor/xlsx.full.min.js"></script>
 <style id="sigeb-supabase-adapter-css">
 /* SIGEB · Adaptador institucional Supabase */
 body:not(.siben-authenticated) #app{visibility:hidden!important;height:100vh!important;overflow:hidden!important}
@@ -2010,7 +2010,7 @@ body.siben-authenticated #v83Login{display:none!important}
           timer=setInterval(function(){
             if(document.visibilityState!=='visible'||!loadSession())return;
             callbacks.forEach(cb=>{try{cb({eventType:'POLL',schema:'public'})}catch(err){console.error(err)}});
-          },30000);
+          },60000);
           return ch;
         },
         unsubscribe(){if(timer)clearInterval(timer);timer=null;channels.delete(ch);return Promise.resolve('ok')},
@@ -2480,8 +2480,8 @@ body.role-admin #sideSolicitudesBtn:not(.hidden){display:grid!important;visibili
 <script id="v78-direct-dni-js">
 (function(){
   'use strict';
-  const MAX_EVIDENCE_BYTES = 2 * 1024 * 1024;
-  const MAX_EVIDENCE_LABEL = '2 MB';
+  const MAX_EVIDENCE_BYTES = 500 * 1024;
+  const MAX_EVIDENCE_LABEL = '500 KB';
   const EVIDENCE_EXTENSIONS = ['pdf','jpg','jpeg'];
 
   function q(id){return document.getElementById(id)}
@@ -3024,10 +3024,10 @@ window.openCase=function(cid){
 
 window.massHTML=function(){
   const al=state.intervention==='Alerta Académica';
-  if(al && typeof canLoadAcademicAlert==='function' && !canLoadAcademicAlert()){
+  if(al && typeof canLoadAcademicAlert==='function' && !canLoadAcademicAlert() && profile?.rol!=='monitora'){
     return '<div class="v80-mass-card"><div class="v80-mass-head"><div><h4>Actualización por FORMATO IES</h4><p class="sub">SUCCOR actualiza alertas existentes, no crea alertas nuevas.</p></div></div><div class="v80-file-line"><div><label>Archivo Excel/CSV</label><input id="massFile" type="file" accept=".csv,.xlsx,.xls"></div><button class="btn btn-ghost btn-small" onclick="downloadTemplate()">Descargar formato</button><button class="btn btn-primary btn-small" onclick="processMass()">Procesar</button></div></div>';
   }
-  return '<div class="v80-mass-card"><div class="v80-mass-head"><div><h4>'+h(state.intervention||'Registro')+' · carga grupal</h4><p class="sub">Opción secundaria. El flujo principal sigue siendo por DNI individual.</p></div>'+(al?'<span class="v80-pill-note">Carga del administrador</span>':'')+'</div><div class="v80-file-line"><div><label>Archivo Excel/CSV</label><input id="massFile" type="file" accept=".csv,.xlsx,.xls"></div><button class="btn btn-ghost btn-small" onclick="downloadTemplate()">Plantilla</button><button class="btn btn-primary btn-small" onclick="processMass()">Procesar</button></div><div class="v80-final-note">Formato mínimo: DNI. Para alertas académicas se reconocen riesgo, prioridad, comentario inicial y fecha de conocimiento.</div></div>';
+  return '<div class="v80-mass-card"><div class="v80-mass-head"><div><h4>'+h(state.intervention||'Registro')+' · carga grupal</h4><p class="sub">Opción secundaria. Máximo 1,000 filas; las observaciones se descargan en Excel.</p></div>'+(al?'<span class="v80-pill-note">Administrador o Especialista</span>':'')+'</div><div class="v80-file-line"><div><label>Archivo Excel/CSV</label><input id="massFile" type="file" accept=".csv,.xlsx,.xls"></div><button class="btn btn-ghost btn-small" onclick="downloadTemplate()">Plantilla</button><button class="btn btn-primary btn-small" onclick="processMass()">Procesar</button></div><div class="v80-final-note">Formato mínimo: DNI. Para alertas académicas se reconocen riesgo, prioridad, comentario inicial y fecha de conocimiento.</div></div>';
 };
 
 function ensureBulkPanel80(){
@@ -3082,13 +3082,13 @@ const oldLoad=window.load;window.load=function(){const r=oldLoad?.apply(this,arg
 const oldSave=window.save;window.save=function(){migrate84();return oldSave?.apply(this,arguments)};
 function required(id,label){const el=q(id);if(!el||!String(el.value||'').trim()){el?.focus();toast('Campo obligatorio','Completa: '+label);return false}return true}
 function requiredSelect(id,label){return required(id,label)}
-function fileValid(input){const fs=[...(input?.files||[])];for(const f of fs){const ext=f.name.split('.').pop().toLowerCase();if(!['jpg','jpeg','pdf'].includes(ext)){toast('Archivo no permitido','Solo PDF, JPG o JPEG.');return false}if(f.size>2*1024*1024){toast('Archivo demasiado grande','Máximo 2 MB por archivo.');return false}}return true}
+function fileValid(input){const fs=[...(input?.files||[])];for(const f of fs){const ext=f.name.split('.').pop().toLowerCase();if(!['jpg','jpeg','pdf'].includes(ext)){toast('Archivo no permitido','Solo PDF, JPG o JPEG.');return false}if(f.size>500*1024){toast('Archivo demasiado grande','Máximo 500 KB por archivo.');return false}}return true}
 function professionalField(){return `<div><label class="v84-required">Profesional responsable del llenado</label><input id="responsableRegistro" placeholder="Nombre y apellidos del profesional responsable"></div>`}
 window.commonContactHTML=function(b){return `<div class="form-block"><div class="form-title"><i></i><h4>Control del registro</h4></div><div class="grid">${professionalField()}<div><label>Fecha de registro</label><input value="${today()}" disabled></div></div></div><div class="form-block"><div class="form-title"><i></i><h4>Datos de contacto</h4></div><div class="grid-3"><div><label class="v84-required">Teléfono del becario</label><input id="telBecario" value="${esc(b.telefono||'')}"></div><div><label class="v84-required">Correo del becario</label><input id="correoBecario" value="${esc(b.correo||'')}"></div><div><label class="v84-required">Nombre del familiar</label><input id="famNombre" placeholder="Nombre y apellidos"></div><div><label class="v84-required">Parentesco</label><select id="famParentesco"><option>Madre</option><option>Padre</option><option>Hermano/a</option><option>Apoderado</option><option>Otro</option></select></div><div><label class="v84-required">Teléfono familiar</label><input id="famTelefono" placeholder="Número de contacto"></div></div></div>`}
 window.caseFormHTML=function(t,b){t=mapType(t);let x='';
-if(t===ORI)x=`<div class="form-block"><div class="form-title"><i></i><h4>Orientación</h4></div><div class="grid"><div><label class="v84-required">Fecha de orientación</label><input id="fecha" type="date" value="${today()}"></div><div><label class="v84-required">Modalidad</label><select id="modalidad"><option value="">Seleccione</option><option>Virtual</option><option>Presencial</option></select></div><div><label class="v84-required">Motivo de la orientación</label><select id="motivo"><option value="">Seleccione</option><option>Desaprobación de curso</option><option>Retraso curricular</option></select></div><div class="full"><label class="v84-required">Descripción de la orientación</label><textarea id="detalle" placeholder="Describe la orientación brindada"></textarea></div><div class="full"><label>¿Se identificó una alerta?</label><select id="esAlerta" onchange="toggleV84LinkedAlert()"><option>No</option><option>Sí</option></select></div><div id="v84LinkedAlert" class="full v84-link-fields v84-hidden"><div class="grid"><div><label class="v84-required">Tipo de alerta</label><select id="tipoAlerta" onchange="renderV84LinkedFields()"><option value="">Seleccione</option><option>Riesgo Adaptativo</option><option>Riesgo Social</option><option>Riesgo Académico</option></select></div><div><label class="v84-required">Motivo de la orientación</label><select id="motivoAlerta"><option value="">Seleccione</option><option>Administrativo</option><option>Bienestar</option></select></div><div class="full"><label class="v84-required">Detalle de la orientación</label><textarea id="detalleAlerta"></textarea></div><div id="v84LinkedSpecific" class="full"></div></div><div class="v84-reminder"><i>⚠</i><span>Enviar la alerta a la DIAB de acuerdo al plazo establecido.</span></div></div><div class="full"><label>Evidencias (PDF/JPG, máximo 2 MB)</label><input id="evidencias" type="file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple></div></div></div>`;
+if(t===ORI)x=`<div class="form-block"><div class="form-title"><i></i><h4>Orientación</h4></div><div class="grid"><div><label class="v84-required">Fecha de orientación</label><input id="fecha" type="date" value="${today()}"></div><div><label class="v84-required">Modalidad</label><select id="modalidad"><option value="">Seleccione</option><option>Virtual</option><option>Presencial</option></select></div><div><label class="v84-required">Motivo de la orientación</label><select id="motivo"><option value="">Seleccione</option><option>Desaprobación de curso</option><option>Retraso curricular</option></select></div><div class="full"><label class="v84-required">Descripción de la orientación</label><textarea id="detalle" placeholder="Describe la orientación brindada"></textarea></div><div class="full"><label>¿Se identificó una alerta?</label><select id="esAlerta" onchange="toggleV84LinkedAlert()"><option>No</option><option>Sí</option></select></div><div id="v84LinkedAlert" class="full v84-link-fields v84-hidden"><div class="grid"><div><label class="v84-required">Tipo de alerta</label><select id="tipoAlerta" onchange="renderV84LinkedFields()"><option value="">Seleccione</option><option>Riesgo Adaptativo</option><option>Riesgo Social</option><option>Riesgo Académico</option></select></div><div><label class="v84-required">Motivo de la orientación</label><select id="motivoAlerta"><option value="">Seleccione</option><option>Administrativo</option><option>Bienestar</option></select></div><div class="full"><label class="v84-required">Detalle de la orientación</label><textarea id="detalleAlerta"></textarea></div><div id="v84LinkedSpecific" class="full"></div></div><div class="v84-reminder"><i>⚠</i><span>Enviar la alerta a la DIAB de acuerdo al plazo establecido.</span></div></div><div class="full"><label>Evidencias (PDF/JPG, máximo 500 KB)</label><input id="evidencias" type="file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple></div></div></div>`;
 if(t===ALERT)x=`<div class="form-block"><div class="form-title"><i></i><h4>Alerta Académica</h4></div><div class="grid"><div><label class="v84-required">Riesgo académico</label><select id="riesgo"><option value="">Seleccione</option><option>Muy Alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label class="v84-required">Nivel de prioridad</label><select id="nivel"><option value="">Seleccione</option><option>Prioridad Alta</option><option>Prioridad Media</option><option>Prioridad Baja</option></select></div><div><label class="v84-required">Fecha de identificación</label><input id="fecha" type="date" value="${today()}"></div><div class="full"><label class="v84-required">Comentario inicial</label><textarea id="detalle"></textarea></div></div></div>`;
-if(t===SOCIAL)x=`<div class="form-block"><div class="form-title"><i></i><h4>Riesgo Social</h4></div><div class="grid"><div><label class="v84-required">Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label class="v84-required">Tipo de riesgo social</label><select id="tipoProt"><option value="">Seleccione</option><option>Intento de suicidio</option><option>Violencia física, psicológica y/o sexual</option></select></div><div class="full"><label class="v84-required">Detalle del caso</label><textarea id="detalle"></textarea></div><div class="full"><label class="v84-required">Orientación brindada al beneficiario/a</label><textarea id="orientacionBrindada"></textarea></div><div><label class="v84-required">¿Requiere oficio?</label><select id="oficio" onchange="toggleOficioDemo()"><option value="">Seleccione</option><option>No</option><option>Sí</option></select></div><div id="oficioBlock" class="full oficio-box hidden"><div class="grid"><div><label class="v84-required">Fecha de envío de oficio</label><input id="fechaOficio" type="date"></div><div><label class="v84-required">N.° de oficio</label><input id="numeroOficio" placeholder="Ej. Oficio N.° 000-2026"></div></div></div><div class="full"><label>Evidencias del caso (PDF/JPG, máximo 2 MB)</label><input id="evidencias" type="file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple></div></div></div>`;
+if(t===SOCIAL)x=`<div class="form-block"><div class="form-title"><i></i><h4>Riesgo Social</h4></div><div class="grid"><div><label class="v84-required">Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label class="v84-required">Tipo de riesgo social</label><select id="tipoProt"><option value="">Seleccione</option><option>Intento de suicidio</option><option>Violencia física, psicológica y/o sexual</option></select></div><div class="full"><label class="v84-required">Detalle del caso</label><textarea id="detalle"></textarea></div><div class="full"><label class="v84-required">Orientación brindada al beneficiario/a</label><textarea id="orientacionBrindada"></textarea></div><div><label class="v84-required">¿Requiere oficio?</label><select id="oficio" onchange="toggleOficioDemo()"><option value="">Seleccione</option><option>No</option><option>Sí</option></select></div><div id="oficioBlock" class="full oficio-box hidden"><div class="grid"><div><label class="v84-required">Fecha de envío de oficio</label><input id="fechaOficio" type="date"></div><div><label class="v84-required">N.° de oficio</label><input id="numeroOficio" placeholder="Ej. Oficio N.° 000-2026"></div></div></div><div class="full"><label>Evidencias del caso (PDF/JPG, máximo 500 KB)</label><input id="evidencias" type="file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple></div></div></div>`;
 return `${t===ALERT?'':commonContactHTML(b)}${x}<div style="text-align:right"><button class="btn btn-primary" onclick="createCase()">Crear expediente</button></div>`}
 window.toggleV84LinkedAlert=function(){q('v84LinkedAlert')?.classList.toggle('v84-hidden',q('esAlerta')?.value!=='Sí')}
 window.renderV84LinkedFields=function(){const t=q('tipoAlerta')?.value,m=q('v84LinkedSpecific');if(!m)return;m.innerHTML=t==='Riesgo Académico'?`<div class="grid"><div><label class="v84-required">Riesgo académico</label><select id="linkRiesgo"><option value="">Seleccione</option><option>Muy Alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label class="v84-required">Prioridad</label><select id="linkNivel"><option value="">Seleccione</option><option>Prioridad Alta</option><option>Prioridad Media</option><option>Prioridad Baja</option></select></div></div>`:t==='Riesgo Social'?`<div><label class="v84-required">Tipo de riesgo social</label><select id="linkSocial"><option value="">Seleccione</option><option>Intento de suicidio</option><option>Violencia física, psicológica y/o sexual</option></select></div>`:''}
@@ -3218,7 +3218,7 @@ function type85(t){const n=norm85(t);if(n.includes('orient'))return ORI85;if(n.i
 function region85(r){return norm85(r)==='callao'?'Lima':(r||'—')}
 function value85(id){return String($(id)?.value||'').trim()}
 function require85(id,label){const el=$(id);if(!el||!String(el.value||'').trim()){el?.focus();toast('Campo obligatorio','Completa: '+label);return false}return true}
-function validFiles85(input){for(const f of [...(input?.files||[])]){const ext=f.name.split('.').pop().toLowerCase();if(!['pdf','jpg','jpeg'].includes(ext)){toast('Archivo no permitido','Solo PDF, JPG o JPEG.');return false}if(f.size>2*1024*1024){toast('Archivo demasiado grande','Máximo 2 MB por archivo.');return false}}return true}
+function validFiles85(input){for(const f of [...(input?.files||[])]){const ext=f.name.split('.').pop().toLowerCase();if(!['pdf','jpg','jpeg'].includes(ext)){toast('Archivo no permitido','Solo PDF, JPG o JPEG.');return false}if(f.size>500*1024){toast('Archivo demasiado grande','Máximo 500 KB por archivo.');return false}}return true}
 function currentActor85(){try{return currentUser()}catch(e){return state.role==='admin'?'ADMINISTRADOR':state.role==='monitora'?'MONITORA':'SUCCOR'} }
 function role85(){return state.role||'succor'}
 function icon85(kind){const icons={
@@ -3233,9 +3233,9 @@ function icon85(kind){const icons={
 /* Formulario de Orientación: el resultado aparece solo cuando se cierra. */
 window.toggleOrientationClose85=function(){const close=value85('v85OriClose')==='Sí';$('v85OriCloseResultWrap')?.classList.toggle('v84-hidden',!close);if(!close&&$('v85OriCloseResult'))$('v85OriCloseResult').value=''};
 window.caseFormHTML=function(t,b){t=type85(t);let x='';
-if(t===ORI85)x=`<div class="form-block"><div class="form-title"><i></i><h4>Orientación</h4></div><div class="grid"><div><label class="v84-required">Fecha de orientación</label><input id="fecha" type="date" value="${today()}"></div><div><label class="v84-required">Modalidad</label><select id="modalidad"><option value="">Seleccione</option><option>Virtual</option><option>Presencial</option></select></div><div><label class="v84-required">Motivo de la orientación</label><select id="motivo"><option value="">Seleccione</option><option>Desaprobación de curso</option><option>Retraso curricular</option></select></div><div class="full"><label class="v84-required">Descripción de la orientación</label><textarea id="detalle" placeholder="Describe la orientación brindada"></textarea></div><div><label>¿Cerrar caso?</label><select id="v85OriClose" onchange="toggleOrientationClose85()"><option>No</option><option>Sí</option></select></div><div id="v85OriCloseResultWrap" class="v84-hidden"><label class="v84-required">Resultado de cierre</label><select id="v85OriCloseResult"><option value="">Seleccione</option><option>Continúa estudiando</option><option>Suspendido/a</option></select></div><div class="full"><label>¿Se identificó una alerta?</label><select id="esAlerta" onchange="toggleV84LinkedAlert()"><option>No</option><option>Sí</option></select></div><div id="v84LinkedAlert" class="full v84-link-fields v84-hidden"><div class="grid"><div><label class="v84-required">Tipo de alerta</label><select id="tipoAlerta" onchange="renderV84LinkedFields()"><option value="">Seleccione</option><option>Riesgo Adaptativo</option><option>Riesgo Social</option><option>Riesgo Académico</option></select></div><div><label class="v84-required">Motivo de la orientación</label><select id="motivoAlerta"><option value="">Seleccione</option><option>Administrativo</option><option>Bienestar</option></select></div><div class="full"><label class="v84-required">Detalle de la orientación</label><textarea id="detalleAlerta"></textarea></div><div id="v84LinkedSpecific" class="full"></div></div><div class="v84-reminder"><i>⚠</i><span>Enviar la alerta a la DIAB de acuerdo al plazo establecido.</span></div></div><div class="full"><label>Evidencias (PDF/JPG, máximo 2 MB)</label><input id="evidencias" type="file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple></div></div></div>`;
+if(t===ORI85)x=`<div class="form-block"><div class="form-title"><i></i><h4>Orientación</h4></div><div class="grid"><div><label class="v84-required">Fecha de orientación</label><input id="fecha" type="date" value="${today()}"></div><div><label class="v84-required">Modalidad</label><select id="modalidad"><option value="">Seleccione</option><option>Virtual</option><option>Presencial</option></select></div><div><label class="v84-required">Motivo de la orientación</label><select id="motivo"><option value="">Seleccione</option><option>Desaprobación de curso</option><option>Retraso curricular</option></select></div><div class="full"><label class="v84-required">Descripción de la orientación</label><textarea id="detalle" placeholder="Describe la orientación brindada"></textarea></div><div><label>¿Cerrar caso?</label><select id="v85OriClose" onchange="toggleOrientationClose85()"><option>No</option><option>Sí</option></select></div><div id="v85OriCloseResultWrap" class="v84-hidden"><label class="v84-required">Resultado de cierre</label><select id="v85OriCloseResult"><option value="">Seleccione</option><option>Continúa estudiando</option><option>Suspendido/a</option></select></div><div class="full"><label>¿Se identificó una alerta?</label><select id="esAlerta" onchange="toggleV84LinkedAlert()"><option>No</option><option>Sí</option></select></div><div id="v84LinkedAlert" class="full v84-link-fields v84-hidden"><div class="grid"><div><label class="v84-required">Tipo de alerta</label><select id="tipoAlerta" onchange="renderV84LinkedFields()"><option value="">Seleccione</option><option>Riesgo Adaptativo</option><option>Riesgo Social</option><option>Riesgo Académico</option></select></div><div><label class="v84-required">Motivo de la orientación</label><select id="motivoAlerta"><option value="">Seleccione</option><option>Administrativo</option><option>Bienestar</option></select></div><div class="full"><label class="v84-required">Detalle de la orientación</label><textarea id="detalleAlerta"></textarea></div><div id="v84LinkedSpecific" class="full"></div></div><div class="v84-reminder"><i>⚠</i><span>Enviar la alerta a la DIAB de acuerdo al plazo establecido.</span></div></div><div class="full"><label>Evidencias (PDF/JPG, máximo 500 KB)</label><input id="evidencias" type="file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple></div></div></div>`;
 if(t===ALERT85)x=`<div class="form-block"><div class="form-title"><i></i><h4>Alerta Académica</h4></div><div class="grid"><div><label class="v84-required">Riesgo académico</label><select id="riesgo"><option value="">Seleccione</option><option>Muy Alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div><div><label class="v84-required">Nivel de prioridad</label><select id="nivel"><option value="">Seleccione</option><option>Prioridad Alta</option><option>Prioridad Media</option><option>Prioridad Baja</option></select></div><div><label class="v84-required">Fecha de identificación</label><input id="fecha" type="date" value="${today()}"></div><div class="full"><label class="v84-required">Comentario inicial</label><textarea id="detalle"></textarea></div></div></div>`;
-if(t===SOCIAL85)x=`<div class="form-block"><div class="form-title"><i></i><h4>Riesgo Social</h4></div><div class="grid"><div><label class="v84-required">Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label class="v84-required">Tipo de riesgo social</label><select id="tipoProt"><option value="">Seleccione</option><option>Intento de suicidio</option><option>Violencia física, psicológica y/o sexual</option></select></div><div class="full"><label class="v84-required">Detalle del caso</label><textarea id="detalle"></textarea></div><div class="full"><label class="v84-required">Orientación brindada al beneficiario/a</label><textarea id="orientacionBrindada"></textarea></div><div><label class="v84-required">¿Requiere oficio?</label><select id="oficio" onchange="toggleOficioDemo()"><option value="">Seleccione</option><option>No</option><option>Sí</option></select></div><div id="oficioBlock" class="full oficio-box hidden"><div class="grid"><div><label class="v84-required">Fecha de envío de oficio</label><input id="fechaOficio" type="date"></div><div><label class="v84-required">N.° de oficio</label><input id="numeroOficio" placeholder="Ej. Oficio N.° 000-2026"></div></div></div><div class="full"><label>Evidencias del caso (PDF/JPG, máximo 2 MB)</label><input id="evidencias" type="file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple></div></div></div>`;
+if(t===SOCIAL85)x=`<div class="form-block"><div class="form-title"><i></i><h4>Riesgo Social</h4></div><div class="grid"><div><label class="v84-required">Fecha de conocimiento</label><input id="fecha" type="date" value="${today()}"></div><div><label class="v84-required">Tipo de riesgo social</label><select id="tipoProt"><option value="">Seleccione</option><option>Intento de suicidio</option><option>Violencia física, psicológica y/o sexual</option></select></div><div class="full"><label class="v84-required">Detalle del caso</label><textarea id="detalle"></textarea></div><div class="full"><label class="v84-required">Orientación brindada al beneficiario/a</label><textarea id="orientacionBrindada"></textarea></div><div><label class="v84-required">¿Requiere oficio?</label><select id="oficio" onchange="toggleOficioDemo()"><option value="">Seleccione</option><option>No</option><option>Sí</option></select></div><div id="oficioBlock" class="full oficio-box hidden"><div class="grid"><div><label class="v84-required">Fecha de envío de oficio</label><input id="fechaOficio" type="date"></div><div><label class="v84-required">N.° de oficio</label><input id="numeroOficio" placeholder="Ej. Oficio N.° 000-2026"></div></div></div><div class="full"><label>Evidencias del caso (PDF/JPG, máximo 500 KB)</label><input id="evidencias" type="file" accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg" multiple></div></div></div>`;
 return `${t===ALERT85?'':commonContactHTML(b)}${x}<div style="text-align:right"><button class="btn btn-primary" onclick="createCase()">Crear expediente</button></div>`};
 
 window.createCase=function(){const t=type85(state.intervention),b=state.validated;if(!b)return toast('DNI pendiente','Valida un beneficiario.');
@@ -3331,6 +3331,10 @@ const ORI='Orientación', ALERT='Alerta Académica', SOCIAL='Riesgo Social', ALL
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const FOLLOW_PAGE_SIZE89=100;
+let followPage89=1,followSignature89='';
+let followSearchTimer89=null;
+window.sigebScheduleFollowSearch=function(){clearTimeout(followSearchTimer89);followSearchTimer89=setTimeout(()=>window.sigebLoadCasePage?window.sigebLoadCasePage(1):window.renderSeguimiento(),350)};
 function typeOf(v){v=String(v&&v.tipo!==undefined?v.tipo:v||'');const n=norm(v);if(n.includes('orient'))return ORI;if(n.includes('alert')||n.includes('academ'))return ALERT;if(n.includes('protocolo')||n.includes('riesgo social'))return SOCIAL;if(n.includes('consolid'))return ALL;return v||'—'}
 function regionOf(v){v=String(v&&v.region!==undefined?v.region:v||'');return /callao/i.test(v)?'Lima':v||'—'}
 function dateOf(c){return String(c.fechaConocimiento||c.fecha||'').slice(0,10)}
@@ -3402,6 +3406,9 @@ table tbody tr:hover td{background:#f2f7fd!important}
 .v89-null{color:#94a3b8}
 @media(max-width:760px){#kpiGrid{grid-template-columns:1fr!important}}
 </style>
+<style id="sigeb-v7-performance-css">
+.v89-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 4px;color:#475569;font-size:13px}.v89-pager>div{display:flex;align-items:center;gap:10px}.v89-pager button:disabled{opacity:.45;cursor:not-allowed}.sigeb-bulk-progress{margin:12px 0;padding:14px;border:1px solid #cfe0f5;border-radius:14px;background:#f8fbff}.sigeb-bulk-progress-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.sigeb-bulk-progress progress{width:100%;height:14px;accent-color:#245cff}.sigeb-bulk-progress small{display:block;margin-top:7px;color:#52657a}@media(max-width:650px){.v89-pager{align-items:flex-start;flex-direction:column}}
+</style>
 <script id="v89-final-refinement-js">
 (function(){
 'use strict';
@@ -3459,28 +3466,37 @@ function colsFor(t){
 window.renderSeguimiento=function(){
   if(typeof ensureFollowFilters==='function')ensureFollowFilters();
   ensureFollow89();
+  const dniSearch=$('v84Dni');if(dniSearch&&!dniSearch.dataset.sigebDebounced){dniSearch.dataset.sigebDebounced='true';dniSearch.oninput=window.sigebScheduleFollowSearch;}
   if(typeof fillFilters==='function')fillFilters();else if(typeof fillFilterOptions==='function')fillFilterOptions();
   const head=$('followHead'),body=$('followRows');if(!head||!body)return;
-  const t=typeOf89(state.followType||ORI),rows=filtered89(t),cols=colsFor(t);
+  const t=typeOf89(state.followType||ORI),allRows=filtered89(t),cols=colsFor(t);
+  const signature=JSON.stringify([t,$('v84Dni')?.value||'',$('v84Year')?.value||'',$('v84Ies')?.value||'',$('v84State')?.value||'',$('v84Region')?[...$('v84Region').selectedOptions].map(o=>o.value):[],$('followDateFrom')?.value||'',$('followDateTo')?.value||'']);
+  if(signature!==followSignature89){followSignature89=signature;followPage89=Number(state.casePagination?.page||1);}
+  const total=Number(state.casePagination?.total??allRows.length),pages=Math.max(1,Number(state.casePagination?.pages||Math.ceil(total/FOLLOW_PAGE_SIZE89)));
+  followPage89=Math.min(Math.max(1,Number(state.casePagination?.page||followPage89)),pages);
+  const start=(followPage89-1)*FOLLOW_PAGE_SIZE89,rows=allRows;
   document.querySelectorAll('.follow-tab').forEach(b=>b.classList.toggle('active',typeOf89(b.dataset.follow||b.dataset.v85Type||b.textContent)===t));
   head.innerHTML=cols.map(c=>`<th>${esc(c[0])}</th>`).join('');
   body.innerHTML=rows.map(c=>`<tr>${cols.map(x=>`<td>${x[1](c)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${cols.length}">Sin casos para los filtros aplicados.</td></tr>`;
+  let pager=$('v89FollowPager');if(!pager){pager=document.createElement('div');pager.id='v89FollowPager';pager.className='v89-pager';$('viewSeguimiento')?.querySelector('.table-box')?.insertAdjacentElement('afterend',pager);}
+  if(pager)pager.innerHTML=`<span>Mostrando ${total?start+1:0}–${Math.min(start+rows.length,total)} de ${total}</span><div><button class="btn btn-soft btn-small" ${followPage89<=1?'disabled':''} onclick="sigebFollowPage89(${followPage89-1})">Anterior</button><b>Página ${followPage89} de ${pages}</b><button class="btn btn-soft btn-small" ${followPage89>=pages?'disabled':''} onclick="sigebFollowPage89(${followPage89+1})">Siguiente</button></div>`;
 };
+window.sigebFollowPage89=async function(page){followPage89=Number(page)||1;if(window.sigebLoadCasePage)await window.sigebLoadCasePage(followPage89);else window.renderSeguimiento();$('viewSeguimiento')?.scrollIntoView({behavior:'smooth',block:'start'});};
 
 /* Dashboard: tres indicadores complementarios, sin duplicar los gráficos. */
 window.renderDashboard=function(){
   ensureDashboard89();
-  const rows=typeof dashboardRows==='function'?dashboardRows():visibleCases();
-  const uniqueDni=new Set(rows.map(c=>c.dni).filter(Boolean)).size,uniqueIes=new Set(rows.map(c=>c.ies).filter(Boolean)).size;
-  if($('kpiGrid'))$('kpiGrid').innerHTML=[['Total de casos',rows.length,'expedientes visibles'],['Beneficiarios únicos',uniqueDni,'DNIs con atención'],['IES con casos',uniqueIes,'instituciones visibles']].map(x=>`<div class="kpi"><b>${esc(x[0])}</b><span>${x[1]}</span><small>${esc(x[2])}</small></div>`).join('');
-  const o=rows.filter(c=>typeOf89(c)===ORI).length,a=rows.filter(c=>typeOf89(c)===ALERT).length,s=rows.filter(c=>typeOf89(c)===SOCIAL).length;
-  const pend=rows.filter(c=>/pendiente/i.test(c.estadoAlerta||c.estado||'')).length,seg=rows.filter(c=>/seguimiento|conocimiento|derivad/i.test(c.estadoAlerta||c.estado||'')).length,fin=rows.filter(c=>/final|cerr|atendid/i.test(c.estadoAlerta||c.estado||'')).length;
+  const rows=typeof dashboardRows==='function'?dashboardRows():visibleCases(),summary=state.caseSummary||{},hasSummary=Number.isFinite(Number(summary.total));
+  const uniqueDni=hasSummary?Number(summary.beneficiarios_unicos||0):new Set(rows.map(c=>c.dni).filter(Boolean)).size,uniqueIes=hasSummary?Number(summary.ies_unicas||0):new Set(rows.map(c=>c.ies).filter(Boolean)).size,total=hasSummary?Number(summary.total||0):rows.length;
+  if($('kpiGrid'))$('kpiGrid').innerHTML=[['Total de casos',total,'expedientes accesibles'],['Beneficiarios únicos',uniqueDni,'DNIs con atención'],['IES con casos',uniqueIes,'instituciones accesibles']].map(x=>`<div class="kpi"><b>${esc(x[0])}</b><span>${x[1]}</span><small>${esc(x[2])}</small></div>`).join('');
+  const byType=summary.por_intervencion||{},o=hasSummary?Number(byType.orientacion||0):rows.filter(c=>typeOf89(c)===ORI).length,a=hasSummary?Number(byType.alerta||0):rows.filter(c=>typeOf89(c)===ALERT).length,s=hasSummary?Number(byType.riesgo_social||0):rows.filter(c=>typeOf89(c)===SOCIAL).length;
+  const stateRows=hasSummary?(summary.por_estado||[]):[],pend=hasSummary?stateRows.filter(x=>/pendiente/i.test(x.estado||'')).reduce((n,x)=>n+Number(x.cantidad||0),0):rows.filter(c=>/pendiente/i.test(c.estadoAlerta||c.estado||'')).length,seg=hasSummary?stateRows.filter(x=>/seguimiento|conocimiento|derivad/i.test(x.estado||'')).reduce((n,x)=>n+Number(x.cantidad||0),0):rows.filter(c=>/seguimiento|conocimiento|derivad/i.test(c.estadoAlerta||c.estado||'')).length,fin=hasSummary?stateRows.filter(x=>/final|cerr|atendid/i.test(x.estado||'')).reduce((n,x)=>n+Number(x.cantidad||0),0):rows.filter(c=>/final|cerr|atendid/i.test(c.estadoAlerta||c.estado||'')).length;
   if(typeof renderDonut==='function')renderDonut('chartIntervencion',[[ORI,o],[ALERT,a],[SOCIAL,s]]);
   if(state.role==='succor'){
-    const ies=[...new Set(rows.map(c=>c.ies).filter(Boolean))].map(i=>[i,rows.filter(c=>c.ies===i).length]).sort((x,y)=>y[1]-x[1]);
+    const ies=hasSummary?(summary.por_ies||[]).map(x=>[x.ies,Number(x.cantidad||0)]):[...new Set(rows.map(c=>c.ies).filter(Boolean))].map(i=>[i,rows.filter(c=>c.ies===i).length]).sort((x,y)=>y[1]-x[1]);
     const card=$('chartRegion')?.closest('.chart-card');if(card){card.querySelector('h4').textContent='Ranking por IES';card.querySelector('p').textContent='IES con mayor número de casos visibles.'}if(typeof renderBars==='function')renderBars('chartRegion',ies,true);
   }else{
-    const regs=[...new Set(rows.map(region89).filter(Boolean))].sort();const card=$('chartRegion')?.closest('.chart-card');if(card){card.querySelector('h4').textContent='Casos por región';card.querySelector('p').textContent='Distribución territorial visible.'}if(typeof renderBars==='function')renderBars('chartRegion',regs.map(r=>[r,rows.filter(c=>region89(c)===r).length]),true);
+    const regs=hasSummary?(summary.por_region||[]).map(x=>[x.region,Number(x.cantidad||0)]):[...new Set(rows.map(region89).filter(Boolean))].sort().map(r=>[r,rows.filter(c=>region89(c)===r).length]);const card=$('chartRegion')?.closest('.chart-card');if(card){card.querySelector('h4').textContent='Casos por región';card.querySelector('p').textContent='Distribución territorial accesible.'}if(typeof renderBars==='function')renderBars('chartRegion',regs,true);
   }
   if(typeof renderBars==='function')renderBars('chartEstado',[['Pendiente',pend],['En seguimiento',seg],['Finalizado',fin]]);
 };
@@ -4009,6 +4025,7 @@ async function rpc(name,args={}){
   if(error)throw new Error(error.message||('Error al ejecutar '+name));
   return data;
 }
+window.sigebRpc=rpc;
 function showError(message){
   const box=$('v83LoginError');
   if(box){box.textContent=message;box.classList.add('show')}
@@ -4107,13 +4124,15 @@ function normalizeCase(row){
     c.fechaConocimientoAutomatico=d.tomado_conocimiento_at||'';c.fechaFinalizacionIES=d.finalizado_at||'';c.comunicacion=d.estado_comunicacion||'';
     c.accionesAlerta=(row.acciones||[]).map(normalizeAction);
   }else if(t==='Orientación'){
-    c.tipoAtencion=d.tipo_orientacion||'';c.motivo=d.motivo||'';c.resultadoCierre=d.resultado_cierre||'';c.esAlerta=!!d.es_alerta;c.tipoAlerta=d.tipo_alerta||'';c.dependencia=d.dependencia_alerta||'';c.detalleAlerta=d.detalle_alerta||'';
+    c.tipoAtencion=d.tipo_orientacion||'';c.motivo=d.motivo||'';c.resultadoCierre=d.resultado_cierre||'';c.esAlerta=!!d.es_alerta;c.tipoAlerta=d.tipo_alerta||'';c.dependencia=d.dependencia_alerta||'';c.motivoAlerta=d.motivo_alerta||'';c.detalleAlerta=d.detalle_alerta||'';c.riesgo=d.riesgo_academico||'';c.nivel=d.prioridad_orientacion||'';c.riesgoSocial=d.tipo_riesgo_social||'';
+    c.contacto={telefono:d.telefono_contacto||row.celular_intranet||'',correo:d.correo_contacto||row.correo_personal_intranet||'',familiar:d.nombre_familiar||'',parentesco:d.parentesco_familiar||'',telefonoFamiliar:d.telefono_familiar||''};
   }else{
     c.protocolo=d.tipo_riesgo||'';c.riesgoSocial=d.tipo_riesgo||'';c.orientacion=d.orientacion||'';c.oficio=d.corresponde_oficio?'Sí':'No';c.fechaOficio=d.fecha_oficio||'';c.numeroOficio=d.numero_oficio||'';c.resultadoCierre=d.resultado_cierre||'';c.requiereAtencionAdicional=!!d.requiere_atencion_adicional;
     c.atenciones=(row.atenciones||[]).map(normalizeAttention);c.sesiones=c.atenciones;c.fechaAtencion=c.atenciones.length?('Atención '+c.atenciones.length):'';
   }
   return c;
 }
+window.sigebNormalizeCase=normalizeCase;
 function normalizeRequest(s){
   const typeMap={creacion_alerta:'carga_alerta',validacion_ies:'validacion_ies',edicion:'edicion',correccion:'edicion',eliminacion:'eliminacion'};
   const monitor=(bootstrap?.monitoras||[]).find(m=>m.user_id===s.destinatario_user_id);
@@ -4179,15 +4198,42 @@ function setOpenedComments(c,row){
   replaceCase(c);
 }
 
+function followFiltersRemote(page=1){
+  const type=caseTypeDb(state.followType||state.intervention||'Orientación');
+  return {
+    case_type:type==='consolidado'?'':type,
+    dni:$('v84Dni')?.value.trim()||'',
+    anio_conv:$('v84Year')?.value||'',
+    ies:$('v84Ies')?.value||'',
+    estado:$('v84State')?.value||'',
+    regiones:$('v84Region')?[...$('v84Region').selectedOptions].map(o=>o.value):[],
+    fecha_desde:$('followDateFrom')?.value||'',fecha_hasta:$('followDateTo')?.value||'',
+    page:Math.max(1,Number(page)||1),page_size:100
+  };
+}
+window.sigebGetFollowFilters=followFiltersRemote;
+async function loadCasePageRemote(page=1,render=true){
+  const result=await rpc('sigeb_listar_casos_paginado',{p_filtros:followFiltersRemote(page)});
+  state.cases=(result?.items||[]).map(normalizeCase).filter(Boolean);
+  state.casePagination={total:Number(result?.total||0),page:Number(result?.page||1),pageSize:Number(result?.page_size||100),pages:Number(result?.pages||1)};
+  if(render&&typeof renderSeguimiento==='function')renderSeguimiento();
+  return state.casePagination;
+}
+window.sigebLoadCasePage=loadCasePageRemote;
 async function refreshData(options={}){
   if(!activeSession)return;
-  const [cases,requests,notifications,distribution]=await Promise.all([
-    rpc('sigeb_listar_casos',{p_filtros:{limit:3000}}),
+  const [pageData,summary,filterOptions,requests,notifications,distribution]=await Promise.all([
+    rpc('sigeb_listar_casos_paginado',{p_filtros:followFiltersRemote(1)}),
+    rpc('sigeb_resumen_casos',{p_filtros:{}}),
+    rpc('sigeb_opciones_seguimiento'),
     rpc('sigeb_listar_solicitudes',{p_limit:1000}),
     rpc('sigeb_listar_notificaciones',{p_limit:100}),
     rpc('sigeb_listar_distribucion_monitoras')
   ]);
-  state.cases=(cases||[]).map(normalizeCase).filter(Boolean);
+  state.cases=(pageData?.items||[]).map(normalizeCase).filter(Boolean);
+  state.casePagination={total:Number(pageData?.total||0),page:Number(pageData?.page||1),pageSize:Number(pageData?.page_size||100),pages:Number(pageData?.pages||1)};
+  state.caseSummary=summary||{};
+  state.caseFilterOptions=filterOptions||{};
   state.solicitudes=(requests||[]).map(normalizeRequest);
   state.notifications=(notifications||[]).map(normalizeNotification);
   remoteDistribution=distribution||[];
@@ -4306,8 +4352,37 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:'caso_acciones'},scheduleRefresh)
     .subscribe();
 }
+async function refreshLiveData(){
+  if(!activeSession)return;
+  const calls=[
+    rpc('sigeb_listar_solicitudes',{p_limit:100}),
+    rpc('sigeb_listar_notificaciones',{p_limit:50})
+  ];
+  const currentView=String(state.view||'');
+  if(currentView==='seguimiento'){
+    calls.push(rpc('sigeb_listar_casos_paginado',{p_filtros:followFiltersRemote(state.casePagination?.page||1)}));
+  }else if(currentView==='dashboard'){
+    calls.push(rpc('sigeb_resumen_casos',{p_filtros:{}}));
+  }
+  const [requests,notifications,contextData]=await Promise.all(calls);
+  state.solicitudes=(requests||[]).map(normalizeRequest);
+  state.notifications=(notifications||[]).map(normalizeNotification);
+  if(currentView==='seguimiento'&&contextData){
+    state.cases=(contextData.items||[]).map(normalizeCase).filter(Boolean);
+    state.casePagination={
+      total:Number(contextData.total||0),page:Number(contextData.page||1),
+      pageSize:Number(contextData.page_size||100),pages:Number(contextData.pages||1)
+    };
+    if(typeof renderSeguimiento==='function')renderSeguimiento();
+  }else if(currentView==='dashboard'&&contextData){
+    state.caseSummary=contextData||{};
+    if(typeof renderDashboard==='function')renderDashboard();
+  }
+  renderSolicitudesRemote();renderNotificationsRemote();
+}
 function scheduleRefresh(){
-  clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refreshData().catch(console.error),450);
+  if(window.SIGEB_BULK_ACTIVE){window.SIGEB_BULK_REFRESH_PENDING=true;return;}
+  clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refreshLiveData().catch(console.error),800);
 }
 
 function renderConfigBox(){
@@ -4391,7 +4466,7 @@ function buildCasePayload(){
 async function uploadEvidenceFiles(caseType,caseId,dni){
   const files=[...($('evidencias')?.files||[])];if(!files.length)return;
   for(const file of files){
-    if(file.size>2097152)throw new Error(`${file.name}: supera el máximo de 2 MB.`);
+    if(file.size>500*1024)throw new Error(`${file.name}: supera el máximo de 500 KB.`);
     if(!['application/pdf','image/jpeg','image/png'].includes(file.type))throw new Error(`${file.name}: formato no permitido.`);
     const safeName=file.name.replace(/[^a-zA-Z0-9._-]+/g,'_');const path=`${activeSession.user.id}/${caseType}/${caseId}/${crypto.randomUUID()}-${safeName}`;
     const {error}=await ensureClient().storage.from(resolveConfig().bucket).upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;
@@ -4494,33 +4569,105 @@ window.requestDeleteCase=cid=>window.openEditDeleteRequest84(cid);
 window.changeState=async function(cid,estado){const c=(state.cases||[]).find(x=>x.id===cid);if(!c)return;try{await rpc('sigeb_aplicar_patch',{p_case_type:c._caseType,p_case_id:cid,p_patch:{estado},p_motivo:'Cambio de estado'});await refreshData()}catch(e){toast('No se pudo cambiar el estado',e.message)}};
 
 function normalizeHeader(v){return norm(v).replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')}
+const SIGEB_MAX_BULK_ROWS=1000;
+function strictDni(v){const s=String(v??'').trim();return /^\d{8}$/.test(s)&&s!=='00000000'?s:''}
+function validIsoBulkDate(s){
+  const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return false;
+  const y=Number(m[1]),month=Number(m[2]),day=Number(m[3]);
+  const d=new Date(Date.UTC(y,month-1,day));
+  return y>=1900&&y<=2100&&d.getUTCFullYear()===y&&d.getUTCMonth()===month-1&&d.getUTCDate()===day;
+}
+function isoBulkDate(v){
+  let candidate='';
+  if(v instanceof Date&&!Number.isNaN(v.getTime()))candidate=v.toISOString().slice(0,10);
+  else if(typeof v==='number'&&v>20000&&v<80000){const p=XLSX.SSF.parse_date_code(v);if(p)candidate=`${p.y}-${String(p.m).padStart(2,'0')}-${String(p.d).padStart(2,'0')}`;}
+  else{
+    const s=String(v??'').trim();if(/^\d{4}-\d{2}-\d{2}/.test(s))candidate=s.slice(0,10);
+    else{const m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(m)candidate=`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;}
+  }
+  if(validIsoBulkDate(candidate))return candidate;
+  return '';
+}
+function validateBulkRow(row,type){
+  const errors=[];if(!row.dni)errors.push('DNI inválido: debe contener exactamente 8 dígitos y no puede ser 00000000.');
+  const rawDate=row.fecha_orientacion||row.fecha||row.fecha_de_conocimiento,date=isoBulkDate(rawDate);
+  if(!date)errors.push('Fecha inválida o vacía. Use una fecha real en formato fecha de Excel o dd/mm/aaaa.');
+  if(type==='orientacion'){
+    if(!String(row.profesional_responsable_del_llenado||'').trim())errors.push('Falta el profesional responsable del llenado.');
+    if(!String(row.modalidad||'').trim())errors.push('Falta la modalidad.');
+    if(!String(row.motivo_orientacion||row.motivo||'').trim())errors.push('Falta el motivo de orientación.');
+    if(!String(row.descripcion_orientacion||row.detalle||'').trim())errors.push('Falta la descripción de la orientación.');
+  }
+  if(type==='alerta'){
+    if(!String(row.riesgo_academico||row.nivel_de_riesgo||row.nivel_riesgo||'').trim())errors.push('Falta el riesgo académico.');
+    if(!String(row.prioridad||row.nivel_de_prioridad||'').trim())errors.push('Falta la prioridad.');
+  }
+  const email=String(row.correo||'').trim();if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))errors.push('Correo con formato inválido.');
+  return {errors,date};
+}
 async function readRows(file){
   if(!window.XLSX)throw new Error('No se pudo cargar el lector de archivos Excel.');
   const data=await file.arrayBuffer();const book=XLSX.read(data,{type:'array',cellDates:true});const sheet=book.Sheets[book.SheetNames[0]];
-  const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false});
+  const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:true});
+  const damagedRow=matrix.findIndex(row=>row.some(value=>String(value??'').includes('\uFFFD')));
+  if(damagedRow>=0)throw new Error(`El archivo contiene texto con codificación dañada (�) en la fila ${damagedRow+1}. No se cargó ninguna fila. Vuelva a exportarlo como XLSX o CSV UTF-8 desde la fuente original.`);
   const headerIndex=matrix.findIndex(row=>row.filter(v=>String(v).trim()).length>=4&&row.some(v=>norm(v)==='dni'));
   if(headerIndex<0)throw new Error('No se encontró una fila de encabezados válida.');
   const used={};const headers=matrix[headerIndex].map(v=>{let k=normalizeHeader(v)||'columna';used[k]=(used[k]||0)+1;return used[k]>1?k+'_'+(used[k]-1):k});
-  return matrix.slice(headerIndex+1).filter(row=>row.some(v=>String(v).trim())).map(row=>{const o={};headers.forEach((h,i)=>o[h]=String(row[i]??'').trim());const candidates=[o.dni_1,o.dni,o.documento,o.numero_de_dni].map(cleanDni);o.dni=candidates.find(x=>/^\d{8}$/.test(x)&&x!=='00000000')||'';return o}).filter(r=>r.dni);
+  return matrix.slice(headerIndex+1).filter(row=>row.some(v=>String(v).trim())).map((row,index)=>{const o={_row:headerIndex+index+2};headers.forEach((h,i)=>o[h]=row[i]??'');const raw=[o.dni_1,o.dni,o.documento,o.numero_de_dni].find(v=>String(v??'').trim()!=='');o._dni_raw=String(raw??'').trim();o.dni=strictDni(raw);return o});
+}
+function ensureBulkProgress(){let box=$('sigebBulkProgress');if(box)return box;const input=$('massFile');if(!input)return null;box=document.createElement('div');box.id='sigebBulkProgress';box.className='sigeb-bulk-progress hidden';box.innerHTML='<div class="sigeb-bulk-progress-head"><b id="sigebBulkLabel">Preparando carga…</b><span id="sigebBulkPct">0%</span></div><progress id="sigebBulkBar" max="100" value="0"></progress><small id="sigebBulkDetail">0 procesados</small>';input.parentElement?.insertAdjacentElement('afterend',box);return box}
+function updateBulkProgress(done,total,ok,fail,label='Procesando carga grupal'){const box=ensureBulkProgress();if(!box)return;box.classList.remove('hidden');const pct=total?Math.round(done*100/total):0;$('sigebBulkBar').value=pct;$('sigebBulkPct').textContent=pct+'%';$('sigebBulkLabel').textContent=label;$('sigebBulkDetail').textContent=`${done} de ${total} procesados · ${Math.max(0,total-done)} restantes · ${ok} correctos · ${fail} observados`;}
+function downloadBulkErrors(errors,fileName='observaciones_carga_SIGEB.xlsx'){
+  if(!errors?.length||!window.XLSX)return;
+  const rows=errors.map(e=>({'Fila de archivo':e.fila||e._row||'',DNI:e.dni||e._dni_raw||'',Observación:e.error||e.motivo||'Registro observado'}));
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(rows);
+  ws['!cols']=[{wch:16},{wch:16},{wch:80}];XLSX.utils.book_append_sheet(wb,ws,'Observaciones');XLSX.writeFile(wb,fileName);
 }
 window.processIESV92=async function(){
   const file=$('v92IESFile')?.files?.[0];if(!file)return toast('Archivo requerido','Seleccione el formato reportado por la IES.');
   try{
     setBusy(true,'Procesando formato IES...');const rows=await readRows(file);
     if(!rows.length)throw new Error('El archivo no contiene filas válidas.');
+    if(file.size>500*1024)throw new Error('El archivo supera el máximo permitido de 500 KB. Reduzca su tamaño o divida la información antes de continuar.');
     const cfg=resolveConfig();let storagePath='';
-    if(file.size<=2097152){storagePath=`${activeSession.user.id}/cargas_ies/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]+/g,'_')}`;const {error}=await ensureClient().storage.from(cfg.bucket).upload(storagePath,file,{contentType:file.type||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});if(error)storagePath='';}
+    storagePath=`${activeSession.user.id}/cargas_ies/${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]+/g,'_')}`;
+    const {error}=await ensureClient().storage.from(cfg.bucket).upload(storagePath,file,{contentType:file.type||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    if(error)throw new Error(`No se pudo guardar el formato IES: ${error.message||'error de almacenamiento'}.`);
     const result=await rpc('sigeb_procesar_carga_ies',{p_storage_path:storagePath,p_file_name:file.name,p_rows:rows});
     await refreshData();const box=$('v92IESResult');if(box){box.classList.remove('hidden');box.innerHTML=`Se procesaron <b>${result.total}</b> filas: ${result.validas} enviadas a validación y ${result.observadas} observadas.`}toast('Carga enviada',`${result.validas} casos requieren validación de monitora.`);
   }catch(e){toast('No se pudo procesar',e.message)}finally{setBusy(false)}
 };
 window.processMass=async function(){
   const file=$('massFile')?.files?.[0];if(!file)return toast('Archivo requerido','Seleccione un Excel o CSV.');
+  let completed=false;
   try{
-    setBusy(true,'Procesando carga grupal...');const rows=await readRows(file);let ok=0,fail=0;
-    for(const row of rows){try{const type=caseTypeDb(state.intervention);const payload={case_type:type,dni:row.dni,fecha:row.fecha||row.fecha_de_conocimiento||new Date().toISOString().slice(0,10),responsable:profile.nombre,detalle:row.detalle||row.comentario_inicial||'Registro grupal',modalidad:row.modalidad||'Virtual',tipo_orientacion:row.tipo_orientacion||'Individual',motivo:row.motivo||'Registro grupal',tipo_riesgo:row.tipo_riesgo||'Otro riesgo social',nivel_riesgo:normalizeRisk(row.nivel_de_riesgo||row.nivel_riesgo||'Alto'),nivel_prioridad:row.nivel_de_prioridad||'Prioridad Alta',prioridad:'Alta',tipo_alerta:'Riesgo académico'};if(type==='alerta'&&profile.rol!=='admin')await crearSolicitudCargaAlertaRemote(payload);else await rpc('sigeb_crear_caso',{p_payload:payload});ok++}catch(e){console.warn(e);fail++}}
-    await refreshData();toast('Carga procesada',`${ok} registros procesados y ${fail} observados.`);
-  }catch(e){toast('No se pudo procesar',e.message)}finally{setBusy(false)}
+    setBusy(true,'Validando archivo...');const rows=await readRows(file);
+    if(!rows.length)throw new Error('El archivo no contiene registros.');
+    if(rows.length>SIGEB_MAX_BULK_ROWS)throw new Error(`La carga contiene ${rows.length} filas. El máximo permitido por archivo es ${SIGEB_MAX_BULK_ROWS}. Divida el archivo antes de continuar.`);
+    const type=caseTypeDb(state.intervention),today=new Date().toISOString().slice(0,10);
+    if(type==='riesgo_social')throw new Error('Riesgo Social solo admite registro individual.');
+    if(type==='alerta'&&profile?.rol==='succor')throw new Error('La carga oficial de Alertas Académicas corresponde al Administrador o Especialista.');
+    const checked=rows.map(row=>({row,...validateBulkRow(row,type)})),invalid=checked.filter(x=>x.errors.length).map(x=>({fila:x.row._row,dni:x.row._dni_raw,error:x.errors.join(' ')}));
+    const payloads=checked.filter(x=>!x.errors.length).map(({row,date})=>({_fila_archivo:row._row,case_type:type,dni:row.dni,fecha:date,responsable:String(row.profesional_responsable_del_llenado||profile.nombre||'').trim(),telefono:String(row.telefono||'').trim(),correo:String(row.correo||'').trim(),nombre_familiar:String(row.nombre_familiar||'').trim(),parentesco:String(row.parentesco||'').trim(),telefono_familiar:String(row.telefono_familiar||'').trim(),detalle:String(row.descripcion_orientacion||row.detalle||row.comentario_inicial||'Registro grupal').trim(),modalidad:String(row.modalidad||'Virtual').trim(),tipo_orientacion:String(row.tipo_orientacion||'Individual').trim(),motivo:String(row.motivo_orientacion||row.motivo||'Registro grupal').trim(),es_alerta:/^(si|sí|true|1)$/i.test(String(row.se_identifico_alerta||'')),tipo_alerta:String(row.tipo_alerta||'').trim(),dependencia_alerta:String(row.dependencia_alerta||'').trim(),motivo_alerta:String(row.motivo_alerta||'').trim(),detalle_alerta:String(row.detalle_alerta||'').trim(),riesgo_academico:String(row.riesgo_academico||'').trim(),tipo_riesgo_social:String(row.tipo_riesgo_social||'').trim(),tipo_riesgo:String(row.tipo_riesgo_social||row.tipo_riesgo||'Otro riesgo social').trim(),nivel_riesgo:normalizeRisk(row.nivel_de_riesgo||row.nivel_riesgo||row.riesgo_academico||'Alto'),nivel_prioridad:String(row.prioridad||row.nivel_de_prioridad||'Prioridad Alta').trim(),prioridad:String(row.prioridad||'Alta').trim()}));
+    if(!payloads.length){downloadBulkErrors(invalid);throw new Error('No hay filas válidas para cargar. Se descargó el Excel de observaciones.');}
+    setBusy(false);window.SIGEB_BULK_ACTIVE=true;window.SIGEB_BULK_REFRESH_PENDING=false;updateBulkProgress(0,payloads.length,0,invalid.length,'Enviando bloques validados a Supabase');
+    const signature=`${file.name}|${file.size}|${file.lastModified}|${type}`;
+    const storageKey='sigeb_bulk_pending_'+signature;let loteId=sessionStorage.getItem(storageKey)||crypto.randomUUID();sessionStorage.setItem(storageKey,loteId);
+    const chunkSize=100;let ok=0,serverFail=0,finalResult=null;
+    for(let offset=0;offset<payloads.length;offset+=chunkSize){
+      const chunk=payloads.slice(offset,offset+chunkSize),finalizar=offset+chunk.length>=payloads.length;
+      const bloque=Math.floor(offset/chunkSize)+1;
+      const result=await rpc('sigeb_cargar_casos_lote',{p_lote_id:loteId,p_intervencion:type,p_archivo:file.name,p_casos:chunk,p_bloque:bloque,p_finalizar:finalizar});
+      if(result?.estado==='Finalizado'){finalResult=result;break;}
+      updateBulkProgress(offset+chunk.length,payloads.length,0,invalid.length,finalizar?'Confirmando la carga':'Enviando bloques de 100');
+    }
+    ok=Number(finalResult?.procesados||0);serverFail=Number(finalResult?.observados||0);const errors=[...invalid,...(finalResult?.errores||[])];
+    updateBulkProgress(payloads.length,payloads.length,ok,errors.length,'Carga grupal finalizada');sessionStorage.removeItem(storageKey);completed=true;
+    if(errors.length)downloadBulkErrors(errors,`observaciones_${file.name.replace(/\.[^.]+$/,'')}.xlsx`);
+    await refreshData();toast('Carga grupal procesada',`${ok} registros procesados y ${errors.length} observados.${errors.length?' Se descargó el detalle en Excel.':''}`);
+  }catch(e){toast('No se pudo procesar',e.message)}finally{setBusy(false);window.SIGEB_BULK_ACTIVE=false}
+  window.SIGEB_BULK_ACTIVE=false;if(window.SIGEB_BULK_REFRESH_PENDING){window.SIGEB_BULK_REFRESH_PENDING=false;refreshData().catch(console.error)}
 };
 
 window.openIESValidationDetail=async function(requestId){
@@ -4806,6 +4953,76 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
+<script id="sigeb-v100-final-performance">
+(function(){
+'use strict';
+const byId=id=>document.getElementById(id);
+function replaceRoleLabels(root=document.body){
+  if(!root)return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){
+    return /^(SCRIPT|STYLE|TEXTAREA)$/.test(node.parentElement?.tagName||'')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT;
+  }});
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{const next=n.nodeValue
+    .replace(/monitoras/gi,m=>m[0]===m[0].toUpperCase()?'Especialistas':'especialistas')
+    .replace(/monitora/gi,m=>m[0]===m[0].toUpperCase()?'Especialista':'especialista');
+    if(next!==n.nodeValue)n.nodeValue=next;
+  });
+}
+function setOptions(id,values,allLabel,multiple=false){
+  const el=byId(id);if(!el||!Array.isArray(values))return;
+  const selected=multiple?[...el.selectedOptions].map(o=>o.value):[el.value];
+  el.innerHTML=(multiple?'':`<option value="">${allLabel}</option>`)+values.map(v=>`<option value="${String(v).replace(/"/g,'&quot;')}">${String(v)}</option>`).join('');
+  [...el.options].forEach(o=>o.selected=selected.includes(o.value));
+}
+function applyRemoteOptions(){
+  const o=state.caseFilterOptions||{};
+  setOptions('v84Year',o.anios||[],'Todos');
+  setOptions('v84Ies',o.ies||[],'Todas');
+  setOptions('v84State',o.estados||[],'Todos');
+  setOptions('v84Region',o.regiones||[],'Todas',true);
+}
+function bindRemoteFilters(){
+  const dni=byId('v84Dni');if(dni)dni.oninput=window.sigebScheduleFollowSearch;
+  ['v84Year','v84Ies','v84State','v84Region','followDateFrom','followDateTo'].forEach(id=>{
+    const el=byId(id);if(el&&!el.dataset.remoteBound){el.dataset.remoteBound='1';el.onchange=()=>window.sigebLoadCasePage?.(1).catch(e=>toast('No se pudo filtrar',e.message));}
+  });
+}
+const oldRender=window.renderSeguimiento;
+window.renderSeguimiento=function(){
+  const result=typeof oldRender==='function'?oldRender.apply(this,arguments):undefined;
+  applyRemoteOptions();bindRemoteFilters();replaceRoleLabels(byId('viewSeguimiento'));return result;
+};
+const oldSetFollowType=window.setFollowType;
+window.setFollowType=function(type){
+  const result=typeof oldSetFollowType==='function'?oldSetFollowType.apply(this,arguments):undefined;
+  setTimeout(()=>window.sigebLoadCasePage?.(1).catch(e=>toast('No se pudo cambiar de intervención',e.message)),0);return result;
+};
+const oldClear=window.clearV84Filters;
+window.clearV84Filters=function(){
+  if(typeof oldClear==='function')oldClear.apply(this,arguments);
+  return window.sigebLoadCasePage?.(1).catch(e=>toast('No se pudieron limpiar los filtros',e.message));
+};
+window.downloadSeguimiento=async function(){
+  if(!window.XLSX)return toast('Excel no disponible','Recargue la página para activar el lector local.');
+  try{
+    setBusy(true,'Preparando exportación...');const filtros=window.sigebGetFollowFilters?window.sigebGetFollowFilters(1):{};
+    delete filtros.page;delete filtros.page_size;
+    const rows=await window.sigebRpc('sigeb_exportar_casos',{p_filtros:filtros});
+    const flat=(rows||[]).map(r=>({
+      Intervención:caseTypeLabel(r.case_type),DNI:r.dni,Beneficiario:r.beneficiario,
+      Región:r.region_operativa,IES:r.ies,Estado:r.estado,Fecha:String(r.fecha||'').slice(0,10),
+      Responsable:r.responsable,Especialista:r.monitora_nombre,Detalle:r.detalle
+    }));
+    const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(flat);ws['!cols']=[{wch:20},{wch:12},{wch:34},{wch:18},{wch:42},{wch:22},{wch:12},{wch:30},{wch:28},{wch:55}];
+    XLSX.utils.book_append_sheet(wb,ws,'Seguimiento');XLSX.writeFile(wb,'SIGEB_seguimiento.xlsx');
+  }catch(e){toast('No se pudo exportar',e.message)}finally{setBusy(false)}
+};
+replaceRoleLabels();
+new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)replaceRoleLabels(n)}))).observe(document.body,{childList:true,subtree:true});
+setTimeout(()=>{applyRemoteOptions();bindRemoteFilters();replaceRoleLabels()},300);
+})();
+</script>
 </body>
 </html>
 <!-- V58: demo local robusta, 3 secciones, alerta académica cargada solo por administrador. -->
