@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="sigeb-build" content="2026-07-20-produccion-final-v1.2.3" />
+  <meta name="sigeb-mode" content="github-pages-supabase" />
   <title>SIGEB · PRONABEC</title>
   <style>
     :root{
@@ -770,7 +772,7 @@ body.role-succor .siben-actions button[onclick="resetDemo()"],body.role-monitora
         </button>
 
         <button class="side-primary" onclick="showView('registro')">Registro de caso</button>
-        <div class="side-footer">SIGEB v1.2.1<br>© PRONABEC 2026</div>
+        <div class="side-footer">SIGEB v1.2.2<br>© PRONABEC 2026</div>
       </aside>
       <main class="main">
         <section class="hero"><div><h2 id="mainTitle">Dashboard</h2><p id="mainSubtitle">Resumen operativo de cartera visible.</p></div><div class="scope-card"><b>Alcance visible</b><span id="statusScope">Lima</span></div></section>
@@ -1717,7 +1719,7 @@ function renderHistoryTab(tab='general'){
 function cleanPrintStyles(){return `@page{size:A4;margin:12mm}body{font-family:Arial,Helvetica,sans-serif;color:#0f172a;background:#fff;font-size:12px;line-height:1.45}.print-wrap{max-width:780px;margin:0 auto}.print-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:4px solid #073b78;padding-bottom:12px;margin-bottom:14px}.print-brand{font-weight:900;color:#073b78;font-size:21px;letter-spacing:.04em;position:relative;padding-bottom:8px}.print-brand:after{content:'';display:block;width:150px;height:4px;border-radius:99px;background:linear-gradient(90deg,#073b78 0 20%,#e7378a 20% 36%,#f5a623 36% 51%,#16a34a 51% 66%,#0584c7 66% 82%,#dc2626 82% 92%,#52525b 92% 100%);margin-top:6px}.print-title{font-size:24px;font-weight:900;color:#082b56;margin:8px 0 2px}.print-sub{color:#64748b}.print-card{border:1px solid #dbe3ee;border-radius:12px;padding:12px;margin:10px 0;background:#fbfdff}.print-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.print-item{border:1px solid #e0e9f3;border-radius:9px;padding:8px;background:#f6f9fc}.print-item b{display:block;color:#64748b;text-transform:uppercase;font-size:9px;letter-spacing:.05em}.print-item span{font-weight:800}.print-row{border:1px solid #e0e9f3;border-radius:10px;padding:10px;margin:7px 0;background:#fff}.print-row b{color:#082b56}.badge,.status{display:inline-block;border-radius:999px;padding:3px 8px;background:#eff6ff;color:#1d4ed8;font-weight:800}.btn,.side-footer,.history-tabs,.pdf-small,.evidence-chip{display:none!important}`}
 </script>
 
-<script src="vendor/xlsx.full.min.js"></script>
+<script src="xlsx.full.min.js"></script>
 <style id="sigeb-supabase-adapter-css">
 /* SIGEB · Adaptador institucional Supabase */
 body:not(.siben-authenticated) #app{visibility:hidden!important;height:100vh!important;overflow:hidden!important}
@@ -3024,7 +3026,7 @@ window.openCase=function(cid){
 
 window.massHTML=function(){
   const al=state.intervention==='Alerta Académica';
-  if(al && typeof canLoadAcademicAlert==='function' && !canLoadAcademicAlert() && profile?.rol!=='monitora'){
+  if(al && typeof canLoadAcademicAlert==='function' && !canLoadAcademicAlert() && window.sigebActiveProfile?.rol!=='monitora'){
     return '<div class="v80-mass-card"><div class="v80-mass-head"><div><h4>Actualización por FORMATO IES</h4><p class="sub">SUCCOR actualiza alertas existentes, no crea alertas nuevas.</p></div></div><div class="v80-file-line"><div><label>Archivo Excel/CSV</label><input id="massFile" type="file" accept=".csv,.xlsx,.xls"></div><button class="btn btn-ghost btn-small" onclick="downloadTemplate()">Descargar formato</button><button class="btn btn-primary btn-small" onclick="processMass()">Procesar</button></div></div>';
   }
   return '<div class="v80-mass-card"><div class="v80-mass-head"><div><h4>'+h(state.intervention||'Registro')+' · carga grupal</h4><p class="sub">Opción secundaria. Máximo 1,000 filas; las observaciones se descargan en Excel.</p></div>'+(al?'<span class="v80-pill-note">Administrador o Especialista</span>':'')+'</div><div class="v80-file-line"><div><label>Archivo Excel/CSV</label><input id="massFile" type="file" accept=".csv,.xlsx,.xls"></div><button class="btn btn-ghost btn-small" onclick="downloadTemplate()">Plantilla</button><button class="btn btn-primary btn-small" onclick="processMass()">Procesar</button></div><div class="v80-final-note">Formato mínimo: DNI. Para alertas académicas se reconocen riesgo, prioridad, comentario inicial y fecha de conocimiento.</div></div>';
@@ -3413,6 +3415,10 @@ table tbody tr:hover td{background:#f2f7fd!important}
 (function(){
 'use strict';
 const ORI='Orientación',ALERT='Alerta Académica',SOCIAL='Riesgo Social',ALL='Consolidado';
+/* V89 se ejecuta en un módulo distinto de V88. Estas variables deben vivir
+   en este mismo ámbito para que el primer render posterior al login no falle. */
+const FOLLOW_PAGE_SIZE89=100;
+let followPage89=1,followSignature89='';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const norm=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -3716,7 +3722,7 @@ function syncBranding(){
   document.title='SIGEB · PRONABEC';
   document.querySelectorAll('.siben-title strong,.side-logo-box h2').forEach(e=>e.textContent='SIGEB');
   document.querySelectorAll('.siben-title span').forEach(e=>e.textContent='Sistema Integral de Gestión del Bienestar');
-  document.querySelectorAll('.side-footer').forEach(e=>e.innerHTML='SIGEB v1.2.1<br>© PRONABEC 2026');
+  document.querySelectorAll('.side-footer').forEach(e=>e.innerHTML='SIGEB v1.2.2<br>© PRONABEC 2026');
   const follow=document.querySelector('.follow-tab[data-follow="Alerta Académica"]');if(follow)follow.textContent='Alertas Académicas';
 }
 function ensureLinkedModules(){
@@ -4086,6 +4092,10 @@ function caseTypeDb(type){
   if(n.includes('riesgo')||n.includes('protocolo'))return 'riesgo_social';
   return n;
 }
+/* Utilidades públicas controladas para los módulos de interfaz cargados
+   después del adaptador. No contienen credenciales ni omiten las RLS. */
+window.sigebSetBusy=setBusy;
+window.sigebCaseTypeLabel=caseTypeLabel;
 function normalizeBeneficiary(b){
   if(!b)return null;
   const condicion=b.estado_condicion_actual||b.estado_becario||b.condicion||'';
@@ -4222,7 +4232,7 @@ async function loadCasePageRemote(page=1,render=true){
 window.sigebLoadCasePage=loadCasePageRemote;
 async function refreshData(options={}){
   if(!activeSession)return;
-  const [pageData,summary,filterOptions,requests,notifications,distribution]=await Promise.all([
+  const results=await Promise.allSettled([
     rpc('sigeb_listar_casos_paginado',{p_filtros:followFiltersRemote(1)}),
     rpc('sigeb_resumen_casos',{p_filtros:{}}),
     rpc('sigeb_opciones_seguimiento'),
@@ -4230,6 +4240,13 @@ async function refreshData(options={}){
     rpc('sigeb_listar_notificaciones',{p_limit:100}),
     rpc('sigeb_listar_distribucion_monitoras')
   ]);
+  const fallback=[{items:[],total:0,page:1,page_size:100,pages:1},{},{anios:[],ies:[],estados:[],regiones:[]},[],[],[]];
+  const values=results.map((result,index)=>{
+    if(result.status==='fulfilled')return result.value;
+    console.warn('SIGEB: módulo secundario no disponible durante el ingreso',result.reason);
+    return fallback[index];
+  });
+  const [pageData,summary,filterOptions,requests,notifications,distribution]=values;
   state.cases=(pageData?.items||[]).map(normalizeCase).filter(Boolean);
   state.casePagination={total:Number(pageData?.total||0),page:Number(pageData?.page||1),pageSize:Number(pageData?.page_size||100),pages:Number(pageData?.pages||1)};
   state.caseSummary=summary||{};
@@ -4297,6 +4314,7 @@ async function bootstrapSession(session){
     activeSession=session;
     bootstrap=await rpc('sigeb_bootstrap');
     profile=bootstrap.profile;
+    window.sigebActiveProfile=profile;
     if(!profile?.activo)throw new Error('El perfil SIGEB no se encuentra activo.');
     const defaultView=profile.rol==='succor'?'registro':profile.rol==='monitora'?'seguimiento':'dashboard';
     const desiredView=storedView(session.user.id);
@@ -4336,7 +4354,7 @@ function ensureLogoutButton(){
   old.type='button';old.onclick=async()=>{setBusy(true,'Cerrando sesión...');try{await ensureClient().auth.signOut()}finally{setBusy(false);resetSignedOutUI()}};
 }
 function resetSignedOutUI(){
-  activeSession=null;profile=null;bootstrap=null;state.cases=[];state.audit=[];state.solicitudes=[];state.notifications=[];
+  activeSession=null;profile=null;bootstrap=null;window.sigebActiveProfile=null;state.cases=[];state.audit=[];state.solicitudes=[];state.notifications=[];
   if(realtimeChannel&&sb){sb.removeChannel(realtimeChannel);realtimeChannel=null}
   document.body.classList.remove('siben-authenticated','role-succor','role-monitora','role-admin');
   $('modal')?.classList.remove('active');
@@ -4403,6 +4421,7 @@ function bindLogin(){
       setBusy(true,'Validando credenciales...');const client=ensureClient();
       const {data,error}=await client.auth.signInWithPassword({email,password});
       if(error)throw error;
+      if(!data?.session?.access_token)throw new Error('Supabase validó la solicitud, pero no devolvió una sesión activa. Recargue la página e inténtelo nuevamente.');
       await bootstrapSession(data.session);
     }catch(e){console.error('SIGEB Auth:',e);showError(authErrorMessage(e))}finally{setBusy(false)}
   });
@@ -4419,7 +4438,7 @@ async function initAuth(){
     const client=ensureClient();
     client.auth.onAuthStateChange((event,session)=>{
       if(event==='SIGNED_OUT')resetSignedOutUI();
-      if(session&&(event==='SIGNED_IN'||event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION'))setTimeout(()=>bootstrapSession(session),0);
+      if(session&&(event==='TOKEN_REFRESHED'||event==='INITIAL_SESSION'))setTimeout(()=>bootstrapSession(session),0);
     });
     const {data,error}=await client.auth.getSession();if(error)throw error;
     if(data.session)await bootstrapSession(data.session);else $('v83Email')?.focus();
@@ -4877,7 +4896,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         return;
       }
       if(typeof state!=='undefined')state.validated=b;
-      if(mount)mount.innerHTML=typeof beneficiaryCardRemote==='function'?beneficiaryCardRemote(b):(typeof benefHTML==='function'?benefHTML(b):'');
+      if(mount)mount.innerHTML=typeof window.benefHTML==='function'?window.benefHTML(b):'';
       cont?.classList.remove('hidden');
     }catch(error){
       console.error('SIGEB V6 DNI:',error);
@@ -4897,10 +4916,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       form?.classList.add('hidden');return;
     }
     try{
-      const b=await lookupBeneficiaryByDni(dni);
+      const lookup=window.sigebLookupBeneficiaryByDni;
+      if(typeof lookup!=='function')throw new Error('La consulta institucional del padrón no se encuentra disponible. Recargue la página con Ctrl + F5.');
+      const b=await lookup(dni);
       if(!b){if(mount)mount.innerHTML='<div class="notice" style="border-color:#fecaca;background:#fee2e2;color:#991b1b">DNI no encontrado en el padrón visible para este usuario.</div>';form?.classList.add('hidden');return}
       if(typeof state!=='undefined')state.validated=b;
-      if(mount)mount.innerHTML=beneficiaryCardRemote(b);
+      if(mount)mount.innerHTML=typeof window.benefHTML==='function'?window.benefHTML(b):'';
       form?.classList.remove('hidden');
       if(form&&typeof caseFormHTML==='function')form.innerHTML=caseFormHTML(state.intervention,b);
     }catch(error){
@@ -4941,9 +4962,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   window.SIGEB_DIAGNOSTICS=Object.freeze({
     version:V6_VERSION,
-    get profile(){return typeof profile!=='undefined'?profile:null},
+    get profile(){return window.sigebActiveProfile||window.__SIGEB_SUPABASE__?.profile||null},
     get caseCount(){return typeof state!=='undefined'&&Array.isArray(state.cases)?state.cases.length:0},
-    async lookupDni(dni){return lookupBeneficiaryByDni(dni)},
+    async lookupDni(dni){
+      if(typeof window.sigebLookupBeneficiaryByDni!=='function')throw new Error('Consulta de padrón no disponible.');
+      return window.sigebLookupBeneficiaryByDni(dni);
+    },
     buttonHitTest(){
       const btn=byId('v92FollowIES')?.querySelector('button');if(!btn)return {ok:false,reason:'button-not-found'};
       const r=btn.getBoundingClientRect(),points=[[r.left+r.width/2,r.top+r.height/2],[r.left+r.width/2,r.bottom-3]];
@@ -5006,17 +5030,17 @@ window.clearV84Filters=function(){
 window.downloadSeguimiento=async function(){
   if(!window.XLSX)return toast('Excel no disponible','Recargue la página para activar el lector local.');
   try{
-    setBusy(true,'Preparando exportación...');const filtros=window.sigebGetFollowFilters?window.sigebGetFollowFilters(1):{};
+    window.sigebSetBusy?.(true,'Preparando exportación...');const filtros=window.sigebGetFollowFilters?window.sigebGetFollowFilters(1):{};
     delete filtros.page;delete filtros.page_size;
     const rows=await window.sigebRpc('sigeb_exportar_casos',{p_filtros:filtros});
     const flat=(rows||[]).map(r=>({
-      Intervención:caseTypeLabel(r.case_type),DNI:r.dni,Beneficiario:r.beneficiario,
+      Intervención:window.sigebCaseTypeLabel?window.sigebCaseTypeLabel(r.case_type):r.case_type,DNI:r.dni,Beneficiario:r.beneficiario,
       Región:r.region_operativa,IES:r.ies,Estado:r.estado,Fecha:String(r.fecha||'').slice(0,10),
       Responsable:r.responsable,Especialista:r.monitora_nombre,Detalle:r.detalle
     }));
     const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet(flat);ws['!cols']=[{wch:20},{wch:12},{wch:34},{wch:18},{wch:42},{wch:22},{wch:12},{wch:30},{wch:28},{wch:55}];
     XLSX.utils.book_append_sheet(wb,ws,'Seguimiento');XLSX.writeFile(wb,'SIGEB_seguimiento.xlsx');
-  }catch(e){toast('No se pudo exportar',e.message)}finally{setBusy(false)}
+  }catch(e){toast('No se pudo exportar',e.message)}finally{window.sigebSetBusy?.(false)}
 };
 replaceRoleLabels();
 new MutationObserver(records=>records.forEach(r=>r.addedNodes.forEach(n=>{if(n.nodeType===1)replaceRoleLabels(n)}))).observe(document.body,{childList:true,subtree:true});
